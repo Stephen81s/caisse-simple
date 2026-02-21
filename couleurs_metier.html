@@ -1,0 +1,56 @@
+<!-- ********************************************************************
+     couleurs_metier_html.html — Coloration dynamique des lignes d’articles
+     Basé sur :
+       - typeCaisse (Legal / Illegal)
+       - stock (colonne D)
+********************************************************************* -->
+
+<script>
+console.log("[couleurs_metier] Module couleurs chargé.");
+
+window.appliquerCouleurLigne = function(ligne, article) {
+
+    if (!article) return;
+
+    // Sécurité : s'assurer que la ligne a la bonne classe
+    ligne.classList.add("ligne-article");
+
+    // Reset des classes
+    ligne.classList.remove(
+        "ligne-legale",
+        "ligne-illegale",
+        "ligne-stock-zero",
+        "ligne-stock-achat"
+    );
+
+    // ============================
+    // 🎨 1. LÉGALITÉ (typeCaisse)
+    // ============================
+    const type = (article.typeCaisse || "").toString().trim().toUpperCase();
+
+    if (type === "ILLEGAL") {
+        ligne.classList.add("ligne-illegale");
+    } else if (type === "LEGAL") {
+        ligne.classList.add("ligne-legale");
+    }
+
+    // ============================
+    // 📦 2. STOCK (article.stock)
+    // ============================
+    const stock = Number(article.stock) || 0;
+
+    if (stock <= 0) {
+
+        const typeOpEl = document.getElementById("typeOperation");
+        if (!typeOpEl) return;
+
+        const typeOp = typeOpEl.value.toUpperCase();
+
+        if (typeOp === "VENTE" || typeOp === "DESTOCK") {
+            ligne.classList.add("ligne-stock-zero");   // violet
+        } else {
+            ligne.classList.add("ligne-stock-achat");  // bleu
+        }
+    }
+};
+</script>

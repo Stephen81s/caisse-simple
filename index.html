@@ -1,0 +1,274 @@
+<!-- ********************************************************************
+     FILE    : index.html
+     MODULE  : CORE INTERFACE — GTARP
+     AUTHOR  : Stephen
+     VERSION : 4.8.0 — PRO GTARP (FIX INITPAGE + ULTRA LOG)
+     --------------------------------------------------------------------
+     DESCRIPTION :
+       - Shell principal de l’interface GTARP
+       - Navigation dynamique entre pages (openPage)
+       - Injection HTML sécurisée :
+           1) Extraction des <script>
+           2) Injection du HTML
+           3) Réinjection des scripts
+       - FIX CRITIQUE : appel explicite de initPage() du fragment
+       - Isolation stricte des scripts par page
+       - Horloge en temps réel
+       - Encarts de caisses mis à jour automatiquement
+       - Logs professionnels, cohérents et uniformisés
+********************************************************************* -->
+
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Le consortium — Interface</title>
+
+    <!-- ============================================================
+         STYLES GLOBAUX (chargés une seule fois)
+    ============================================================ -->
+    <?!= include('style_global'); ?>
+    <?!= include('style_nav'); ?>
+    <?!= include('style_encarts'); ?>
+    <?!= include('style_accueil'); ?>
+    <?!= include('style_caisse'); ?>
+    <?!= include('style_articles'); ?>
+    <?!= include('style_livraison'); ?>
+    <?!= include('style_craft'); ?>
+    <?!= include('style_banque'); ?>
+   
+    <!-- CONSTANTES FRONT (disponibles globalement) -->
+    <?!= include('constantes_front'); ?>
+
+    <script>
+        console.log("🟦 [index] Initialisation du shell principal…");
+    </script>
+</head>
+
+<body>
+
+<!-- ============================================================
+     HEADER + NAVIGATION
+============================================================ -->
+<header class="header">
+
+    <nav class="header-nav">
+        <div class="dropdown" id="menu-principal">
+            <button class="dropdown-btn">Navigation ▾</button>
+
+            <div class="dropdown-menu">
+                <button id="nav-accueil" onclick="openPage('interface_accueil')">🏠 Accueil</button>
+                <button id="nav-caisse" onclick="openPage('interface_caisse')">💰 Caisse</button>
+                <button id="nav-craft" onclick="openPage('interface_craft_alcool')">🍾 Craft</button>
+                <button id="nav-banque" onclick="openPage('banque')">🏦 Banque</button>
+                <button id="nav-tchat" onclick="openPage('tchat_front')">💬 Tchat</button>
+            </div>
+        </div>
+    </nav>
+
+    <h1 class="header-title">Le consortium — Interface</h1>
+
+    <div id="horloge" class="header-clock"></div>
+
+</header>
+
+<!-- ============================================================
+     ENCARDS TOUJOURS VISIBLES
+============================================================ -->
+<section class="encarts-container">
+
+    <div class="encart" id="encart-global">
+        💰 Global : <span id="montant-global">0$</span>
+    </div>
+
+    <div class="encart" id="encart-illegale">
+        ❌ Illégale : <span id="montant-illegale">0$</span>
+    </div>
+
+    <div class="encart" id="encart-tequilalala">
+        🍸 Tequi-la-la : <span id="montant-tequilalala">0$</span>
+    </div>
+
+    <div class="encart" id="encart-downtown">
+        🚕 Downtown Cab Co : <span id="montant-downtown">0$</span>
+    </div>
+
+    <div class="encart" id="encart-weazelnews">
+        📺 Weazel News : <span id="montant-weazelnews">0$</span>
+    </div>
+
+</section>
+
+<!-- ============================================================
+     CONTENEUR PRINCIPAL (pages dynamiques)
+============================================================ -->
+<main class="main-container">
+    <div id="page-frame" class="page-frame"></div>
+</main>
+
+<!-- ============================================================
+     SCRIPTS PRINCIPAUX
+============================================================ -->
+<script>
+console.log("🟦 [index] Script principal chargé.");
+
+let currentPage = null;
+
+/* ============================================================
+   NAVIGATION — Mise en surbrillance du bouton actif
+============================================================ */
+function setActiveNav(pageName) {
+    const ids = ["nav-accueil", "nav-caisse", "nav-craft", "nav-banque", "nav-ticket", "nav-tchat"];
+    ids.forEach(id => document.getElementById(id)?.classList.remove("nav-active"));
+
+    const btn = document.getElementById("nav-" + pageName.split("_")[1]);
+    if (btn) btn.classList.add("nav-active");
+}
+
+/* ============================================================
+   NAVIGATION — Chargement dynamique d’une page
+============================================================ */
+function openPage(pageName) {
+
+    if (currentPage === pageName) {
+        console.log("ℹ️ [index] Page déjà active :", pageName);
+        return;
+    }
+
+    console.log("📄 [index] Demande d’ouverture :", pageName);
+    currentPage = pageName;
+    setActiveNav(pageName);
+
+    google.script.run
+        .withSuccessHandler(html => {
+
+            console.log("🟩 [index] Page reçue :", pageName);
+
+            const frame = document.getElementById("page-frame");
+
+            /* ------------------------------------------------------------
+               1) EXTRACTION DES SCRIPTS
+            ------------------------------------------------------------ */
+            const temp = document.createElement("div");
+            temp.innerHTML = html;
+
+            const scripts = [...temp.querySelectorAll("script")];
+            scripts.forEach(s => s.remove());
+
+            /* ------------------------------------------------------------
+               2) INJECTION DU HTML
+            ------------------------------------------------------------ */
+            frame.innerHTML = temp.innerHTML;
+
+            /* ------------------------------------------------------------
+               3) RÉINJECTION DES SCRIPTS
+            ------------------------------------------------------------ */
+            scripts.forEach(oldScript => {
+                const newScript = document.createElement("script");
+
+                if (oldScript.src) newScript.src = oldScript.src;
+                else newScript.textContent = oldScript.textContent;
+
+                frame.appendChild(newScript);
+            });
+
+            console.log("🟩 [index] Injection terminée. Appel initPage()…");
+
+            /* ------------------------------------------------------------
+               4) FIX CRITIQUE : appel explicite du fragment
+            ------------------------------------------------------------ */
+            if (typeof initPage === "function") {
+                console.log("🟦 [index] initPage() détecté → exécution");
+                initPage();
+            } else {
+                console.warn("🟧 [index] Aucun initPage() trouvé dans le fragment");
+            }
+
+        })
+        .withFailureHandler(err => {
+            console.error("❌ [index] ERREUR lors du chargement :", err);
+        })
+        .loadPage(pageName);
+}
+
+/* ============================================================
+   HORLOGE — Mise à jour chaque seconde
+============================================================ */
+function lancerHorloge() {
+    const el = document.getElementById("horloge");
+
+    function updateClock() {
+        el.textContent = new Date().toLocaleTimeString("fr-FR");
+    }
+
+    updateClock();
+    setInterval(updateClock, 1000);
+}
+
+/* ============================================================
+   ENCARDS — Mise à jour automatique des montants
+============================================================ */
+function rafraichirMontants() {
+    console.log("🔄 [index] Mise à jour des montants…");
+
+    google.script.run.withSuccessHandler(data => {
+
+        document.getElementById("montant-global").textContent = data.global + "$";
+        document.getElementById("montant-illegale").textContent = data.illegale + "$";
+        document.getElementById("montant-tequilalala").textContent = data.tequilalala + "$";
+        document.getElementById("montant-downtown").textContent = data.downtown + "$";
+        document.getElementById("montant-weazelnews").textContent = data.weazelnews + "$";
+
+        console.log("🟩 [index] Montants mis à jour :", data);
+
+    }).getMontantsCaisses();
+}
+
+/* ============================================================
+   CHARGEMENT INITIAL
+============================================================ */
+window.addEventListener("load", () => {
+
+    console.log("🟦 [index] Chargement initial…");
+
+    lancerHorloge();
+    rafraichirMontants();
+    setInterval(rafraichirMontants, 5000);
+
+    openPage("interface_accueil");
+});
+</script>
+
+<!-- ============================================================
+     MENU DÉROULANT — VERSION PRO
+============================================================ -->
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+
+    console.log("🟦 [menu] Initialisation du menu déroulant…");
+
+    const dropdown = document.getElementById("menu-principal");
+    const btn = dropdown.querySelector(".dropdown-btn");
+
+    btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        dropdown.classList.toggle("open");
+
+        console.log(dropdown.classList.contains("open")
+            ? "🟩 [menu] Menu ouvert"
+            : "🟥 [menu] Menu fermé"
+        );
+    });
+
+    document.addEventListener("click", () => {
+        if (dropdown.classList.contains("open")) {
+            dropdown.classList.remove("open");
+            console.log("🟥 [menu] Menu fermé (clic extérieur)");
+        }
+    });
+});
+</script>
+
+</body>
+</html>

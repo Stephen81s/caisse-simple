@@ -1,0 +1,116 @@
+<!-- ********************************************************************
+     FILE: constantes_front.html
+     MODULE: FRONT — CONSTANTES SYNCHRONISÉES AVEC LE BACKEND
+     AUTHOR: Stephen
+     VERSION: 3.1.0
+     --------------------------------------------------------------------
+     Rôle :
+       - Centraliser toutes les constantes FRONT utilisées par les modules
+       - Assurer une correspondance parfaite avec 00_constantes_globales.gs
+       - Rendre toutes les constantes accessibles globalement via window.<nom>
+       - Éviter les doubles déclarations dans les pages injectées
+       - Fournir les constantes LOTERIE + GTARP dans un seul module propre
+********************************************************************* -->
+
+<script>
+console.log("📘 [constantes_front] Initialisation du module FRONT…");
+
+/* ============================================================
+ * 📄 FEUILLES — NOMS OFFICIELS (synchronisés backend)
+ * ============================================================ */
+window.FEUILLE_ARTICLES        = "Articles";
+window.FEUILLE_EMPLOYES        = "Employées";
+window.FEUILLE_TYPES_OP        = "TypeOperations";
+window.FEUILLE_MOYENS_PAIEMENT = "MoyenPaiements";
+window.FEUILLE_ITEMS_CACHE     = "ItemsCache";
+window.FEUILLE_RESUME          = "Résumé";
+window.FEUILLE_COMPTA          = "Compta";
+window.FEUILLE_TICKETS         = "Tickets";
+window.FEUILLE_ANNUAIRE        = "Annuaire";
+
+/* 🔥 IMPORTANT :
+   FEUILLE_RESSOURCES et FEUILLE_SERVICES supprimées
+   car elles n’existent pas dans le backend.
+*/
+
+console.log("📄 [constantes_front] Feuilles enregistrées :", {
+  FEUILLE_ARTICLES,
+  FEUILLE_EMPLOYES,
+  FEUILLE_TYPES_OP,
+  FEUILLE_MOYENS_PAIEMENT,
+  FEUILLE_ITEMS_CACHE,
+  FEUILLE_RESUME,
+  FEUILLE_COMPTA,
+  FEUILLE_TICKETS,
+  FEUILLE_ANNUAIRE
+});
+
+/* ============================================================
+ * 🌐 ACTIONS API — Synchronisées backend
+ * ============================================================ */
+window.FN_LIRE_CAISSE_INITIALE = "lireCaisseEntiere";
+window.FN_LIRE_ARTICLES        = "lireArticles";
+window.FN_LIRE_ARTICLE_INFO    = "lireArticleInfo";
+window.FN_LIRE_ANNUAIRE        = "lireAnnuaire";
+window.FN_LIRE_ANNUAIRE_MAP    = "lireAnnuaireMap";
+
+/* --- LOTERIE (READ) --- */
+window.FN_LIRE_TICKETS         = "getAllTickets";
+
+/* --- ÉCRITURE / MAJ --- */
+window.FN_ECRIRE_CAISSE        = "ecrireCaisse";
+window.FN_ECRIRE_ANNUAIRE      = "ecrireAnnuaire";
+window.FN_ECRIRE_RESSOURCE     = "ecrireRessource";
+window.FN_ECRIRE_SERVICE       = "ecrireService";
+window.FN_ECRIRE_RESUME        = "ecrireResume";
+
+window.FN_MAJ_ANNUAIRE         = "majAnnuaire";
+window.FN_MAJ_RESSOURCE        = "majRessource";
+window.FN_MAJ_SERVICE          = "majService";
+
+console.log("🌐 [constantes_front] Actions API enregistrées :", {
+  FN_LIRE_CAISSE_INITIALE,
+  FN_LIRE_ARTICLES,
+  FN_LIRE_ARTICLE_INFO,
+  FN_LIRE_ANNUAIRE,
+  FN_LIRE_ANNUAIRE_MAP,
+  FN_LIRE_TICKETS,
+  FN_ECRIRE_CAISSE,
+  FN_ECRIRE_ANNUAIRE,
+  FN_ECRIRE_RESSOURCE,
+  FN_ECRIRE_SERVICE,
+  FN_ECRIRE_RESUME,
+  FN_MAJ_ANNUAIRE,
+  FN_MAJ_RESSOURCE,
+  FN_MAJ_SERVICE
+});
+
+/* ============================================================
+ * 🛠️ STATUTS GÉNÉRIQUES
+ * ============================================================ */
+window.STATUS_OK     = "OK";
+window.STATUS_ERROR  = "ERROR";
+window.STATUS_VALID  = "VALIDÉ";
+window.STATUS_REFUSE = "REFUSÉ";
+
+/* ============================================================
+ * 🎟️ LOTERIE — CONSTANTES SPÉCIFIQUES
+ * ============================================================ */
+window.COLOR_EN_ATTENTE = "#cccccc";
+window.COLOR_REVELE     = "#3498db";
+window.COLOR_VALIDE     = "#2ecc71";
+window.COLOR_REFUSE     = "#e74c3c";
+
+window.LABEL_EN_ATTENTE = "En attente";
+window.LABEL_REVELE     = "Révélé";
+window.LABEL_VALIDE     = "Validé";
+window.LABEL_REFUSE     = "Refusé";
+
+/* Auto-refresh LOTERIE */
+window.GRID_REFRESH_MS = 5000;
+
+/* Popup animation */
+window.POPUP_ANIMATION_MS = 150;
+
+console.log("📘 [constantes_front] Module FRONT chargé avec succès.");
+</script>

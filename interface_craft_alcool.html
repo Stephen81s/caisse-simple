@@ -1,0 +1,70 @@
+<!-- ********************************************************************
+     interface_craft_alcool.html — Interface Craft Alcool (FRAGMENT)
+     Version : 4.7.0 — PRO GTARP (sans CSS)
+********************************************************************* -->
+
+<!-- ========================================================= -->
+<!-- 🧪 POP-UP MESSAGE                                         -->
+<!-- ========================================================= -->
+
+<div id="popup-message" style="
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #222;
+    color: white;
+    padding: 15px 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 15px #00000088;
+    font-size: 15px;
+    white-space: pre-line;
+    display: none;
+    max-width: 300px;
+    z-index: 9999;
+"></div>
+
+<!-- ========================================================= -->
+<!-- 🧪 INTERFACE CRAFT ALCOOL                                 -->
+<!-- ========================================================= -->
+
+<div id="craft-wrapper">
+
+    <div class="craft-block">
+        <div class="category-header-center">🧪 Produits purs</div>
+        <div class="craft-row" id="pur-1"></div>
+
+        <div class="category-header-center">🍾 Produits finis</div>
+        <div class="craft-row" id="fini-1"></div>
+    </div>
+
+    <div class="craft-block">
+        <div class="category-header-center">🧪 Produits purs</div>
+        <div class="craft-row" id="pur-2"></div>
+
+        <div class="category-header-center">🍾 Produits finis</div>
+        <div class="craft-row" id="fini-2"></div>
+    </div>
+
+</div>
+
+<!-- ========================================================= -->
+<!-- 🔥 INCLUDES DES SCRIPTS CRAFT (OBLIGATOIRE)               -->
+<!-- ========================================================= -->
+
+<?!= include('crafts_front'); ?>
+<?!= include('crafts_logique'); ?>
+
+<!-- ========================================================= -->
+<!-- 🔥 HOOK D’INITIALISATION — VERSION PRO GTARP              -->
+<!-- ========================================================= -->
+
+<script>
+setTimeout(() => {
+    if (typeof initPage === "function") {
+        console.log("🟦 [craft_front] Appel de initPage() depuis le fragment craft…");
+        initPage();
+    } else {
+        console.warn("⚠️ [craft_front] initPage() non disponible.");
+    }
+}, 0);
+</script>

@@ -1,0 +1,122 @@
+<!-- ********************************************************************
+     interface_caisse.html — Interface principale de la caisse (FRAGMENT)
+     --------------------------------------------------------------------
+     Auteur  : Stephen
+     Version : 4.7.0 — PRO (INITPAGE HOOK FIX)
+     Rôle    :
+       - Affichage pur de l’interface caisse
+       - Aucun appel métier interne
+       - Déclenche initPage() du module caisse_gs APRÈS réinjection des scripts
+********************************************************************* -->
+
+<div id="interface_caisse" class="page-wrapper">
+
+    <h1 class="page-title">📦 Gestion de la Caisse</h1>
+
+    <div class="ligne-full center">
+        <label for="typeOperation">Type d’opération :</label>
+        <select id="typeOperation"></select>
+    </div>
+
+    <div class="ligne-quad">
+
+        <div class="champ">
+            <label for="employe">Employé :</label>
+            <select id="employe"></select>
+        </div>
+
+        <div class="champ">
+            <label for="client">Client :</label>
+            <input id="client" list="clientsList" placeholder="Nom du client">
+            <datalist id="clientsList"></datalist>
+        </div>
+
+        <div class="champ">
+            <label for="telephone">Téléphone :</label>
+            <input id="telephone" type="text" placeholder="Téléphone du client">
+        </div>
+
+        <div class="champ">
+            <label for="paiement">Paiement :</label>
+            <select id="paiement"></select>
+        </div>
+
+    </div>
+
+    <datalist id="articlesList"></datalist>
+
+    <h2>🧾 Articles</h2>
+
+    <template id="template-ligne-article">
+        <div class="ligne-article" style="display:flex; gap:10px; align-items:center;">
+
+            <input class="articleInput" list="articlesList" placeholder="Article">
+            <input class="prixUnitaire" type="number" placeholder="PU" readonly>
+            <input class="quantite" type="number" min="1" value="1">
+
+            <div style="display:flex; gap:5px;">
+                <input class="remiseMontant" type="number" placeholder="Remise">
+                <select class="remiseType">
+                    <option value="€">€</option>
+                    <option value="%">%</option>
+                </select>
+            </div>
+
+            <input class="totalLigne" type="number" placeholder="Total" readonly>
+
+            <button class="dupliquerLigne">⧉</button>
+            <button class="supprimerLigne">✖</button>
+        </div>
+    </template>
+
+    <div id="lignesReelles"></div>
+
+    <h2>🚚 Livraison</h2>
+
+    <div class="ligne-double">
+        <input id="livraisonMontant" type="number" placeholder="Montant">
+        <select id="livraisonType">
+            <option value="€">€</option>
+            <option value="%">%</option>
+        </select>
+    </div>
+
+    <div class="ligne-boutons">
+        <button id="ajouterLigne">➕ Ajouter une ligne</button>
+        <button id="validerCaisse">✔ Valider la caisse</button>
+    </div>
+
+    <div class="total-wrapper">
+        <span>Total final : <span id="totalArticle">0.00</span> $</span>
+    </div>
+
+</div>
+
+<!-- ============================================================
+     SCRIPTS FRONT — AUCUNE LOGIQUE ICI
+============================================================ -->
+<?!= include('caisse_gs'); ?>
+<?!= include('couleurs_metier'); ?>
+<?!= include('caisse_ligne_article'); ?>
+<?!= include('blocage_validation'); ?>
+<?!= include('validation_accepter'); ?>
+
+<script>
+console.log("🟩 [interface_caisse] Interface HTML chargée.");
+
+/* ============================================================
+   🔥 HOOK D’INITIALISATION — VERSION PRO GTARP
+   ------------------------------------------------------------
+   - Appelé APRÈS réinjection des scripts
+   - Déclenche initPage() du module caisse_gs
+   - Garantit que le DOM + scripts sont prêts
+============================================================ */
+setTimeout(() => {
+    if (typeof initPage === "function") {
+        console.log("🟦 [interface_caisse] Appel de initPage() depuis le fragment…");
+        initPage();
+    } else {
+        console.warn("⚠️ [interface_caisse] initPage() non disponible.");
+    }
+}, 0);
+</script>

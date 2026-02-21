@@ -1,0 +1,77 @@
+/*  ***************************************************
+ * ⏱️ JS_HORLOGE — Horloge en temps réel (Version PRO+)
+ * --------------------------------------------------
+ * Format :
+ *   JJ/MM/AAAA — HH:MM:SS
+ *
+ * Rôle :
+ *   - Mettre à jour l’horloge affichée dans le header
+ *   - Fonctionne automatiquement au chargement de la page
+ ***************************************************  */
+
+console.log("⏱️ [JS_HORLOGE] Initialisation du module horloge…");
+
+
+/*  ***************************************************
+ * 🕒 updateClock()
+ * --------------------------------------------------
+ * Met à jour l’affichage complet :
+ *   - Jour (numérique)
+ *   - Mois (numérique)
+ *   - Année
+ *   - Heure
+ ***************************************************  */
+function updateClock() {
+    try {
+        const now = new Date();
+
+        // Heure
+        const heures   = String(now.getHours()).padStart(2, "0");
+        const minutes  = String(now.getMinutes()).padStart(2, "0");
+        const secondes = String(now.getSeconds()).padStart(2, "0");
+
+        // Date
+        const jour  = String(now.getDate()).padStart(2, "0");
+        const mois  = String(now.getMonth() + 1).padStart(2, "0"); // +1 car 0 = janvier
+        const annee = now.getFullYear();
+
+        const horloge = document.getElementById("horloge");
+
+        if (!horloge) {
+            console.warn("⚠️ [JS_HORLOGE] Élément #horloge introuvable.");
+            return;
+        }
+
+        horloge.textContent = `${jour}/${mois}/${annee} — ${heures}:${minutes}:${secondes}`;
+
+    } catch (err) {
+        console.error("❌ [JS_HORLOGE] ERREUR dans updateClock() :", err);
+    }
+}
+
+
+/*  ***************************************************
+ * ▶️ startClock()
+ * --------------------------------------------------
+ * Lance l’horloge et met à jour chaque seconde
+ ***************************************************  */
+function startClock() {
+    console.log("▶️ [JS_HORLOGE] Démarrage de l’horloge…");
+
+    try {
+        updateClock();
+        setInterval(updateClock, 1000);
+        console.log("🟩 [JS_HORLOGE] Horloge opérationnelle.");
+    } catch (err) {
+        console.error("❌ [JS_HORLOGE] ERREUR dans startClock() :", err);
+    }
+}
+
+
+/* ***************************************************
+ * 🚀 Lancement automatique au chargement de la page
+ *************************************************** */
+window.addEventListener("load", () => {
+    console.log("⏱️ [JS_HORLOGE] Lancement automatique…");
+    startClock();
+});

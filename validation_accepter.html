@@ -1,0 +1,253 @@
+<script>
+/********************************************************************
+ * FILE    : ticket_interface_caisse.js
+ * MODULE  : CAISSE + LOTERIE + EMBEDS DISCORD
+ * AUTHOR  : Stephen
+ * VERSION : 6.0.0 — PRO GTARP
+ * ------------------------------------------------------------------
+ * RÔLE :
+ *   - Gérer la validation d’une opération de caisse
+ *   - Vérifier les stocks avant validation
+ *   - Construire le résumé (Résumé)
+ *   - Mettre à jour les stocks (Stock)
+ *   - Créditer les caisses (Banque)
+ *   - Déclencher les embeds Discord (Transactions)
+ *   - Créer automatiquement les tickets LOTERIE
+ *   - Gérer l’UX (alertes, reset, rechargement)
+ ********************************************************************/
+
+console.log("🟪 [caisse_js] Module CAISSE + LOTERIE chargé…");
+
+/* =====================================================================
+   🧠 DÉTERMINER LA CAISSE À CRÉDITER
+   ===================================================================== */
+function determinerCaisse(article) {
+
+    const type = (article.typeCaisse || "").toLowerCase().trim();
+    const ent  = (article.Entreprise || "").toLowerCase().trim();
+
+    if (type === "illegal") return "Illegal";
+    if (ent.includes("tequi")) return "Tequilalala";
+    if (ent.includes("downtown")) return "DowntownCabCo";
+    if (ent.includes("weazel")) return "WeazelNews";
+
+    return "Tequilalala";
+}
+
+/* =====================================================================
+   🟦 VALIDATION DE LA CAISSE (ÉVÉNEMENT PRINCIPAL)
+   ===================================================================== */
+document.getElementById("validerCaisse").addEventListener("click", () => {
+
+    const typeOp     = document.getElementById("typeOperation").value.toUpperCase();
+    const employe    = document.getElementById("employe").value;
+    const client     = document.getElementById("client").value || "";
+    const paiement   = document.getElementById("paiement").value;
+    const telephone  = document.getElementById("telephone")?.value || "";
+
+    console.log("🟦 [caisse_js] Validation caisse →", { typeOp, employe, client, paiement });
+
+    /* =====================================================================
+       1) VÉRIFICATION DES STOCKS
+       ===================================================================== */
+    if (typeOp === "VENTE" || typeOp === "DESTOCK") {
+
+        let erreurStock = false;
+        let articlesEnErreur = [];
+
+        document.querySelectorAll(".ligne-article").forEach(ligne => {
+
+            const nomArticle = ligne.querySelector(".articleInput").value.trim();
+            const article    = trouverArticle(nomArticle);
+
+            if (article && Number(article.stock) <= 0) {
+                erreurStock = true;
+                articlesEnErreur.push(article.nom);
+            }
+        });
+
+        if (erreurStock) {
+            alert(
+                "❌ Validation impossible.\n\n" +
+                "Articles en rupture :\n" +
+                articlesEnErreur.join(", ") +
+                "\n\nOpération bloquée."
+            );
+            console.warn("❌ [caisse_js] Rupture stock →", articlesEnErreur);
+            return;
+        }
+    }
+
+    /* =====================================================================
+       2) CONSTRUCTION DU RÉSUMÉ (Résumé)
+       ===================================================================== */
+    let lignesResume = [];
+
+    document.querySelectorAll(".ligne-article").forEach(ligne => {
+
+        const nomArticle = ligne.querySelector(".articleInput").value.trim();
+        const article    = trouverArticle(nomArticle);
+        if (!article) return;
+
+        const prixU = parseFloat(ligne.querySelector(".prixUnitaire").value) || 0;
+        const qte   = parseFloat(ligne.querySelector(".quantite").value) || 1;
+        const total = parseFloat(ligne.querySelector(".totalLigne").value) || 0;
+
+        const typeCaisse = determinerCaisse(article);
+
+        const ligneResume = {
+            heure:        new Date().toLocaleString("fr-FR"),
+            employe:      employe,
+            typeMouvement: typeOp,
+            client:       client,
+            article:      article.nom,
+            prixUnitaire: prixU,
+            quantite:     qte,
+            totalArticle: total,
+            paiement:     paiement,
+            typeCaisse:   typeCaisse
+        };
+
+        lignesResume.push(ligneResume);
+
+        /* =====================================================================
+           2.6) CRÉATION AUTOMATIQUE D’UN TICKET LOTERIE
+           ===================================================================== */
+        if (article.nom.toLowerCase().includes("ticket")) {
+
+            console.log("🎟 [loterie] Ticket détecté → création…");
+
+            const rarete       = article.rarete  || "Commun";
+            const gain         = article.gain    || 0;
+            const couleurEmbed = article.couleur || 0x1e90ff;
+
+            google.script.run
+                .withSuccessHandler(ticketCree => {
+                    console.log("🎟 [loterie] Ticket créé :", ticketCree);
+
+                    alert(
+                        "🎟 Ticket créé !\n\n" +
+                        "ID : " + ticketCree.id + "\n" +
+                        "Client : " + ticketCree.client + "\n" +
+                        "Révélation : " + ticketCree.dateRevelation
+                    );
+                })
+                .withFailureHandler(err => {
+                    console.error("❌ [loterie] Erreur création ticket :", err);
+                    alert("❌ Erreur lors de la création du ticket.");
+                })
+                .createTicket(client, employe, rarete, gain, couleurEmbed);
+        }
+
+    }); // ← FIN forEach
+
+    if (lignesResume.length === 0) {
+        alert("❌ Aucune ligne article valide à enregistrer.");
+        console.warn("❌ [caisse_js] Aucun article valide.");
+        return;
+    }
+
+    /* =====================================================================
+       2.7) CONSTRUCTION OBJET EMBED TRANSACTION
+       ===================================================================== */
+    let articlesForEmbed = [];
+    let totalTransaction = 0;
+
+    lignesResume.forEach(ligne => {
+
+        const article = trouverArticle(ligne.article);
+
+        articlesForEmbed.push({
+            nom:   ligne.article,
+            pu:    ligne.prixUnitaire,
+            qte:   ligne.quantite,
+            total: ligne.totalArticle,
+            type:  ligne.typeCaisse === "Illegal" ? "Illégal" : "Légal",
+            entreprise: article.Entreprise
+        });
+
+        totalTransaction += ligne.totalArticle;
+    });
+
+    const entreprise = articlesForEmbed[0].entreprise;
+
+    /* =====================================================================
+       2.8) OBJET DATA → MODULE TRANSACTION
+       ===================================================================== */
+    const data = {
+        operation: typeOp,
+        entreprise: entreprise,
+        employe: employe,
+        moyenPaiement: paiement,
+        client: client,
+        telephone: telephone,
+        date: new Date().toLocaleString("fr-FR"),
+        articles: articlesForEmbed
+    };
+
+    /* =====================================================================
+       2.9) ENVOI EMBED TRANSACTION
+       ===================================================================== */
+    google.script.run
+        .withSuccessHandler(() => {
+            console.log("🟩 [caisse_js] Embed transaction envoyé.");
+        })
+        .withFailureHandler(err => {
+            console.error("❌ [caisse_js] Erreur embed transaction :", err);
+        })
+        .processTransaction(data);
+
+    /* =====================================================================
+       3) RÉSUMÉ → STOCK → CAISSE
+       ===================================================================== */
+    google.script.run
+        .withSuccessHandler(() => {
+
+            google.script.run
+                .withSuccessHandler(() => {
+
+                    lignesResume.forEach(ligne => {
+
+                        const montantFinal = calculerMontantFinal(typeOp, ligne.totalArticle);
+
+                        google.script.run
+                            .withFailureHandler(err => {
+                                console.error("❌ [caisse_js] Erreur crédit caisse :", err);
+                            })
+                            .ajouterMontantCaisse(ligne.typeCaisse, montantFinal);
+                    });
+
+                    function calculerMontantFinal(typeOperation, montant) {
+                        const type = (typeOperation || "").toUpperCase().trim();
+                        if (type === "ACHAT") return -Math.abs(montant);
+                        if (type === "VENTE") return  Math.abs(montant);
+                        return 0;
+                    }
+
+                    /* =====================================================================
+                       5) RESET + RELOAD
+                       ===================================================================== */
+                    document.querySelectorAll(".ligne-article").forEach(l => l.remove());
+                    document.getElementById("client").value = "";
+                    document.getElementById("paiement").value = "";
+                    document.getElementById("typeOperation").value = "VENTE";
+
+                    if (typeof recalculerTotal === "function") recalculerTotal();
+                    if (typeof chargerDonneesCaisse === "function") chargerDonneesCaisse();
+
+                    alert("✔ Vente enregistrée, stock mis à jour, caisses créditées et ticket(s) créé(s).");
+
+                })
+                .withFailureHandler(err => {
+                    console.error("❌ [caisse_js] Erreur mise à jour stock :", err);
+                })
+                .mettreAJourStock(lignesResume);
+
+        })
+        .withFailureHandler(err => {
+            console.error("❌ [caisse_js] Erreur Résumé :", err);
+        })
+        .envoyerDansResume(lignesResume);
+
+});
+</script>

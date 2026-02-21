@@ -1,0 +1,80 @@
+<!-- ********************************************************************
+     interface_banque.html — Interface Banque RP (FRAGMENT)
+     Version : 3.0.0 — PRO GTARP
+********************************************************************* -->
+
+<!-- ========================================================= -->
+<!-- 🧾 MESSAGE / RESULTAT                                     -->
+<!-- ========================================================= -->
+
+<div id="banque-resultat" style="
+    display:none;
+    margin-bottom: 20px;
+    padding: 12px;
+    background: #1e1e1e;
+    border: 1px solid #30363d;
+    border-radius: 8px;
+    color: #c9d1d9;
+"></div>
+
+<!-- ========================================================= -->
+<!-- 🏦 INTERFACE BANQUE RP                                    -->
+<!-- ========================================================= -->
+
+<div id="banque-wrapper">
+
+    <div class="banque-block">
+
+        <div class="banque-header">🏦 Banque RP</div>
+
+        <!-- Sélecteur employé -->
+        <label class="banque-label">Employé :</label>
+        <select id="banque-employe" class="banque-input"></select>
+
+        <!-- Sélecteur caisse -->
+        <label class="banque-label">Caisse :</label>
+        <select id="banque-caisse" class="banque-input">
+            <option value="TEQUI">Tequi-la-la</option>
+            <option value="TAXI">Downtown Cab Co</option>
+            <option value="WEAZEL">Weazel News</option>
+            <option value="ILLEGAL">Caisse illégale</option>
+        </select>
+
+        <!-- Montant -->
+        <label class="banque-label">Montant :</label>
+        <input id="banque-montant" type="number" class="banque-input" placeholder="Ex : 500">
+
+        <!-- Motif -->
+        <label class="banque-label">Motif :</label>
+        <input id="banque-motif" type="text" class="banque-input" placeholder="Ex : Vente, Service, etc.">
+
+        <!-- Boutons -->
+        <div class="banque-btn-row">
+            <button class="banque-btn-depot" onclick="banqueDepot()">Dépôt</button>
+            <button class="banque-btn-retrait" onclick="banqueRetrait()">Retrait</button>
+        </div>
+
+    </div>
+
+</div>
+
+<!-- ========================================================= -->
+<!-- 🔥 INCLUDES FRONT BANQUE                                  -->
+<!-- ========================================================= -->
+
+<?!= include('banque_front'); ?>
+
+<!-- ========================================================= -->
+<!-- 🔥 HOOK D’INITIALISATION                                  -->
+<!-- ========================================================= -->
+
+<script>
+setTimeout(() => {
+    if (typeof initBanque === "function") {
+        console.log("🏦 [banque_front] Appel de initBanque() depuis le fragment banque…");
+        initBanque();
+    } else {
+        console.warn("⚠️ [banque_front] initBanque() non disponible.");
+    }
+}, 0);
+</script>

@@ -1,0 +1,155 @@
+<script>
+/********************************************************************
+   FILE : banque_front.html
+   MODULE : BANQUE RP — FRONTEND
+   VERSION : 4.2.0 — PRO GTARP
+   AUTHOR : Stephen
+   ------------------------------------------------------------------
+   Rôle :
+     - Charger les employés
+     - Gérer dépôt / retrait
+     - Envoyer les opérations au backend
+     - Afficher le résultat
+     - Reset automatique de l’interface
+     - Assurer cohérence totale avec backend + constantes
+*********************************************************************/
+
+/* ============================================================
+   🏦 INIT BANQUE
+============================================================ */
+function initBanque() {
+    console.log("🏦 [banque_front] initBanque() lancé…");
+    chargerEmployes();
+}
+
+/* ============================================================
+   🧭 MAPPING FRONT → BACK (CENTRALISÉ)
+============================================================ */
+const CAISSES_FRONT = {
+    TEQUI: "Tequilalala",
+    ILLEGAL: "Illegal",
+    DOWNTOWN: "DowntownCabCo",
+    WEAZEL: "WeazelNews"
+};
+
+/* ============================================================
+   👥 CHARGER LES EMPLOYÉS
+============================================================ */
+function chargerEmployes() {
+    console.log("👥 [banque_front] Chargement des employés…");
+
+    google.script.run
+        .withSuccessHandler(liste => {
+            console.log("👥 [banque_front] Employés reçus :", liste);
+
+            const select = document.getElementById("banque-employe");
+            if (!select) {
+                console.error("❌ [banque_front] Élément #banque-employe introuvable.");
+                return;
+            }
+
+            select.innerHTML = "";
+
+            liste.forEach(nom => {
+                const opt = document.createElement("option");
+                opt.value = nom;
+                opt.textContent = nom;
+                select.appendChild(opt);
+            });
+        })
+        .withFailureHandler(err => {
+            console.error("❌ [banque_front] Erreur chargement employés :", err);
+        })
+        .getListeEmployes();
+}
+
+/* ============================================================
+   📥 DÉPÔT
+============================================================ */
+function banqueDepot() {
+    envoyerOperation(+1);
+}
+
+/* ============================================================
+   📤 RETRAIT
+============================================================ */
+function banqueRetrait() {
+    envoyerOperation(-1);
+}
+
+/* ============================================================
+   🔄 ENVOI OPÉRATION (VERSION PRO)
+============================================================ */
+function envoyerOperation(sens) {
+    const typeCaisseFront = document.getElementById("banque-caisse").value;
+    const employe         = document.getElementById("banque-employe").value;
+    const motif           = document.getElementById("banque-motif").value;
+    const montantBrut     = Number(document.getElementById("banque-montant").value);
+
+    if (!montantBrut || montantBrut <= 0) {
+        afficherResultat("Montant invalide.", true);
+        return;
+    }
+
+    const montant = montantBrut * sens;
+
+    // 🔥 Conversion FRONT → BACK
+    const typeCaisse = CAISSES_FRONT[typeCaisseFront];
+
+    if (!typeCaisse) {
+        console.error("❌ [banque_front] Caisse inconnue côté FRONT :", typeCaisseFront);
+        afficherResultat("Caisse inconnue : " + typeCaisseFront, true);
+        return;
+    }
+
+    console.log("📨 [banque_front] Envoi opération :", {
+        typeCaisse, montant, employe, motif
+    });
+
+    google.script.run
+        .withSuccessHandler(data => {
+            console.log("🟩 [banque_front] Réponse backend :", data);
+            afficherResultat("Nouveau montant : " + data.nouveauMontant + "$", false);
+
+            // 🔄 Reset interface après succès
+            resetBanqueUI();
+        })
+        .withFailureHandler(err => {
+            console.error("❌ [banque_front] Erreur backend :", err);
+            afficherResultat("Erreur : " + err.message, true);
+        })
+        .banqueAjouterMontant(typeCaisse, montant, employe, motif);
+}
+
+/* ============================================================
+   🧾 AFFICHAGE DU RÉSULTAT
+============================================================ */
+function afficherResultat(message, isError = false) {
+    const box = document.getElementById("banque-resultat");
+    if (!box) return;
+
+    box.style.display = "block";
+    box.style.borderColor = isError ? "#e74c3c" : "#2ecc71";
+    box.style.color = isError ? "#e74c3c" : "#c9d1d9";
+    box.textContent = message;
+}
+
+/* ============================================================
+   🔄 RESET INTERFACE BANQUE (VERSION PRO)
+============================================================ */
+function resetBanqueUI() {
+    const montant  = document.getElementById("banque-montant");
+    const motif    = document.getElementById("banque-motif");
+    const resultat = document.getElementById("banque-resultat");
+
+    if (montant) montant.value = "";
+    if (motif) motif.value = "";
+
+    // Masquer le message après 2 secondes
+    if (resultat) {
+        setTimeout(() => {
+            resultat.style.display = "none";
+        }, 2000);
+    }
+}
+</script>

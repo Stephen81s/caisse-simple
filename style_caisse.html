@@ -1,0 +1,189 @@
+<style>
+/* ********************************************************************
+   FILE : style_caisse.html
+   MODULE : Caisse / Facturation
+   VERSION : 1.0.0 — GTARP PRO
+   AUTHOR : Stephen
+   DESCRIPTION :
+      - Layout caisse
+      - Sélecteurs employés / clients / paiements
+      - Lignes d’articles
+      - Boutons caisse
+********************************************************************* */
+
+/* LAYOUT CAISSE */
+.ligne-full {
+  width: 100%;
+  margin-bottom: 15px;
+}
+
+.center {
+  text-align: center;
+}
+
+.ligne-full label {
+  font-weight: bold;
+  margin-right: 8px;
+}
+
+.ligne-full select {
+  width: 220px;
+  padding: 8px;
+  background: #0d1117;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  color: #c9d1d9;
+}
+
+/* EMPLOYÉ / CLIENT / PAIEMENT */
+.ligne-quad {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.champ {
+  display: flex;
+  flex-direction: column;
+}
+
+.champ label {
+  margin-bottom: 4px;
+  font-weight: bold;
+}
+
+.champ select,
+.champ input {
+  padding: 7px;
+  background: #0d1117;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  color: #c9d1d9;
+}
+
+/* ARTICLES */
+h2 {
+  margin: 10px 0;
+  font-size: 18px;
+}
+
+.template-ligne,
+#lignesReelles .ligne-article {
+  display: grid;
+  grid-template-columns: 2fr 1fr 0.8fr 1fr 0.8fr auto auto;
+  gap: 12px;
+  margin-bottom: 10px;
+  padding: 8px;
+  background: #1e1e1e;
+  border-radius: 6px;
+  transition: 0.25s;
+}
+
+.template-ligne input,
+#lignesReelles input,
+#lignesReelles select {
+  padding: 7px;
+  background: #0d1117;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  color: #c9d1d9;
+}
+
+.dupliquerLigne,
+.supprimerLigne {
+  padding: 7px 12px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.dupliquerLigne {
+  background: #1f6feb;
+  color: white;
+}
+
+.dupliquerLigne:hover {
+  background: #1158c7;
+}
+
+.supprimerLigne {
+  background: #da3633;
+  color: white;
+}
+
+.supprimerLigne:hover {
+  background: #b62324;
+}
+
+/* COULEURS MÉTIER */
+.ligne-legale {
+  background-color: rgba(46, 160, 67, 0.20) !important;
+  border-left: 4px solid #2ea043 !important;
+}
+
+.ligne-illegale {
+  background-color: rgba(218, 54, 51, 0.20) !important;
+  border-left: 4px solid #da3633 !important;
+}
+
+.ligne-stock-zero {
+  background-color: rgba(163, 113, 247, 0.20) !important;
+  border-left: 4px solid #a371f7 !important;
+}
+
+.ligne-stock-achat {
+  background-color: rgba(88, 166, 255, 0.20) !important;
+  border-left: 4px solid #58a6ff !important;
+}
+
+/* BOUTONS */
+.ligne-boutons {
+  display: flex;
+  justify-content: space-between;
+  margin: 15px 0;
+}
+
+.ligne-boutons button {
+  padding: 10px 14px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+#ajouterLigne {
+  background: #1f6feb;
+  color: white;
+}
+
+#ajouterLigne:hover {
+  background: #1158c7;
+}
+
+#validerCaisse {
+  background: #238636;
+  color: white;
+}
+
+#validerCaisse:hover {
+  background: #2ea043;
+}
+
+/* TOTAL FINAL */
+.total-wrapper {
+  width: 100%;
+  margin-top: 30px;
+  padding: 35px;
+  border: 3px solid #da3633;
+  border-radius: 12px;
+  background: #0d1117;
+  text-align: center;
+}
+
+.total-wrapper span {
+  font-size: 34px;
+  font-weight: 900;
+  color: #ff7b72;
+}
+</style>

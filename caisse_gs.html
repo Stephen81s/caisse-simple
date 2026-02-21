@@ -1,0 +1,169 @@
+<!-- ********************************************************************
+     FILE    : caisse_gs.html
+     MODULE  : FRONT — CAISSE RP
+     AUTHOR  : Stephen
+     VERSION : 4.6.0 — PRO GTARP (SIMPLE INIT, NO OVER-PROTECTION)
+     --------------------------------------------------------------------
+     RÔLE :
+       - Charger les données de la caisse (API publique)
+       - Remplir selects / datalists
+       - Ajouter automatiquement une ligne article
+       - Fournir trouverArticle() au module caisse_js
+       - Suppression de la sur-protection isCaissePage()
+       - Hypothèse assumée : ce module n’est chargé QUE sur la page caisse
+       - Logs professionnels et cohérents
+********************************************************************* -->
+
+<script>
+console.log("🟦 [caisse] Module caisse_gs chargé.");
+
+
+
+/* ============================================================
+   🔍 Recherche intelligente d’article
+   ------------------------------------------------------------
+   - Utilise window.__caisseData.articles
+   - Match exact, puis startsWith, puis includes
+============================================================ */
+function trouverArticle(nomTape) {
+
+    const nom = (nomTape || "").trim().toLowerCase();
+    if (!nom) return null;
+
+    const articles = window.__caisseData?.articles || [];
+    if (!articles.length) return null;
+
+    return (
+        articles.find(a => a.nom.toLowerCase() === nom) ||
+        articles.find(a => a.nom.toLowerCase().startsWith(nom)) ||
+        articles.find(a => a.nom.toLowerCase().includes(nom)) ||
+        null
+    );
+}
+
+
+
+/* ============================================================
+   🧩 UTILITAIRES : Remplissage des selects / datalists
+============================================================ */
+function remplirSelect(id, valeurs) {
+
+    const select = document.getElementById(id);
+    if (!select) {
+        console.warn(`⚠️ [caisse] Select introuvable : #${id}`);
+        return;
+    }
+
+    select.innerHTML = "";
+    valeurs.forEach(v => {
+        const opt = document.createElement("option");
+        opt.value = v;
+        opt.textContent = v;
+        select.appendChild(opt);
+    });
+
+    console.log(`🟩 [caisse] Select rempli : #${id} (${valeurs.length} valeurs)`);
+}
+
+function remplirDatalist(id, valeurs) {
+
+    const dl = document.getElementById(id);
+    if (!dl) {
+        console.warn(`⚠️ [caisse] Datalist introuvable : #${id}`);
+        return;
+    }
+
+    dl.innerHTML = "";
+    valeurs.forEach(v => {
+        const opt = document.createElement("option");
+        opt.value = v;
+        dl.appendChild(opt);
+    });
+
+    console.log(`🟩 [caisse] Datalist remplie : #${id} (${valeurs.length} valeurs)`);
+}
+
+
+
+/* ============================================================
+   📥 CHARGEMENT DES DONNÉES DE LA CAISSE (API PUBLIC)
+============================================================ */
+function chargerDonneesCaisse() {
+
+    console.log("🟦 [caisse] Chargement des données…");
+
+    google.script.run
+        .withSuccessHandler(response => {
+
+            console.log("🟩 [caisse] Données reçues (brut) :", response);
+
+            const data = response.data;
+            if (!data) {
+                console.error("🟥 [caisse] ERREUR : response.data est undefined !");
+                return;
+            }
+
+            console.log("🟩 [caisse] Payload extrait :", data);
+
+            // Signature globale unique pour les autres modules (blocage, etc.)
+            window.__caisseData = data;
+
+            // Types d’opération
+            remplirSelect("typeOperation", data.typesOp);
+
+            // Employés
+            const nomsEmployes = data.employes.map(e => `${e.nom} ${e.prenom}`);
+            remplirSelect("employe", nomsEmployes);
+
+            // Clients
+            const nomsClients = data.annuaire.map(c => `${c.nom} ${c.prenom}`);
+            remplirDatalist("clientsList", nomsClients);
+
+            // Modes de paiement
+            remplirSelect("paiement", data.paiements);
+
+            // Articles
+            const nomsArticles = data.articles.map(a => a.nom);
+            remplirDatalist("articlesList", nomsArticles);
+
+            console.log("🟩 [caisse] Tous les champs ont été remplis.");
+
+            // Ajout automatique d’une première ligne article
+            if (typeof ajouterLigneArticle === "function") {
+                console.log("➕ [caisse] Ajout automatique d’une ligne article.");
+                ajouterLigneArticle();
+            } else {
+                console.warn("⚠️ [caisse] ajouterLigneArticle() non disponible.");
+            }
+        })
+        .withFailureHandler(err => {
+            console.error("❌ [caisse] ERREUR lors du chargement des données :", err);
+        })
+        .apiPublic("lireCaisseEntiere", null);
+}
+
+
+
+/* ============================================================
+   🚀 INIT PAGE — appelé par interface_caisse.html
+   ------------------------------------------------------------
+   - Hypothèse : si ce script tourne, on est sur la page caisse
+   - Hypothèse : le DOM de la caisse est déjà injecté
+   - On ne fait plus de détection agressive ni de timeout
+============================================================ */
+function initPage() {
+
+    console.log("🟦 [caisse] initPage() appelé…");
+
+    // Vérification minimale : présence du conteneur principal
+    const root = document.getElementById("interface_caisse");
+    if (!root) {
+        console.warn("🟨 [caisse] #interface_caisse introuvable → init annulée.");
+        return;
+    }
+
+    console.log("🟩 [caisse] Conteneur caisse détecté → initialisation…");
+    chargerDonneesCaisse();
+    console.log("🟩 [caisse] initPage() exécutée.");
+}
+</script>

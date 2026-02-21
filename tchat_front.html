@@ -1,0 +1,407 @@
+<!-- ********************************************************************
+     FICHIER : tchat_front.html (FRAGMENT)
+     VERSION : 5.0.0 — PRO GTARP
+     Auteur  : Stephen
+********************************************************************* -->
+
+<!-- 🔊 Son message reçu -->
+<audio id="tchat-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-message-pop-alert-2354.mp3" preload="auto"></audio>
+
+<!-- ========================= POPUP IDENTITÉ ========================= -->
+<div id="tchat-login-overlay">
+  <div id="tchat-login-box">
+    <h2>🎭 Identité RP</h2>
+
+    <label>Nom RP</label>
+    <input id="tchat-nom" type="text" placeholder="Ex : Jean Dupont">
+
+    <label>Surnom</label>
+    <input id="tchat-surnom" type="text" placeholder="Ex : LeRoublard">
+
+    <button id="tchat-login-btn" onclick="tchat_validateIdentity()">Entrer</button>
+  </div>
+</div>
+
+<!-- ========================= LAYOUT GLOBAL ========================= -->
+<div id="layout">
+
+  <!-- ========================= TCHAT NORMAL ========================= -->
+  <div id="tchat-container">
+
+    <div id="tchat-header">
+      <div id="tchat-title">💬 Tchat interne</div>
+      <div id="tchat-status">● Connecté</div>
+    </div>
+
+    <div id="tchat-messages"></div>
+
+    <div id="tchat-input">
+      <input id="tchat-message-input" type="text" placeholder="Écrire un message..." />
+      <button onclick="tchat_sendMessage()">Envoyer</button>
+      <button onclick="tchat_sendImportant()">⭐</button>
+    </div>
+
+  </div>
+
+  <!-- ========================= MESSAGES IMPORTANTS ======================= -->
+  <div id="important-container">
+
+    <div id="important-header">
+      <div id="important-title">⭐ Messages Importants</div>
+      <div id="important-status">● Lecture seule</div>
+    </div>
+
+    <div id="important-messages"></div>
+
+  </div>
+
+</div>
+
+<!-- ========================= CSS ========================= -->
+<style>
+/* POPUP IDENTITÉ */
+#tchat-login-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.75);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 99999;
+}
+
+#tchat-login-box {
+  width: 420px;
+  background: linear-gradient(135deg, #4a148c, #880e4f);
+  padding: 25px;
+  border-radius: 10px;
+  color: white;
+  box-shadow: 0 0 20px rgba(0,0,0,0.6);
+  animation: popupFade 0.3s ease-out;
+}
+
+#tchat-login-box input {
+  width: 100%;
+  padding: 8px;
+  margin-top: 4px;
+  border-radius: 6px;
+  border: none;
+  background: rgba(255,255,255,0.2);
+  color: white;
+}
+
+#tchat-login-btn {
+  width: 100%;
+  margin-top: 20px;
+  padding: 10px;
+  background: gold;
+  border: none;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  color: black;
+}
+
+@keyframes popupFade {
+  from { transform: scale(0.8); opacity: 0; }
+  to   { transform: scale(1); opacity: 1; }
+}
+
+/* LAYOUT */
+#layout {
+  display: flex;
+  gap: 20px;
+  width: 100%;
+  max-width: 1300px;
+  margin: auto;
+}
+
+/* TCHAT NORMAL */
+#tchat-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 500px;
+  border: 1px solid #333;
+  background: #1a1a1a;
+  color: #eee;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+#tchat-header {
+  background: #222;
+  padding: 10px 14px;
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px solid #333;
+}
+
+#tchat-messages {
+  flex: 1;
+  padding: 10px;
+  overflow-y: auto;
+}
+
+.tchat-message {
+  margin-bottom: 8px;
+  padding: 6px 8px;
+  background: #2a2a2a;
+  border-radius: 4px;
+}
+
+.tchat-important {
+  border-left: 4px solid gold;
+  background: #3a2a00 !important;
+}
+
+#tchat-input {
+  display: flex;
+  gap: 6px;
+  padding: 8px;
+  background: #222;
+  border-top: 1px solid #333;
+}
+
+#tchat-message-input {
+  flex: 1;
+  padding: 6px;
+  background: #333;
+  color: #eee;
+  border: none;
+  border-radius: 4px;
+}
+
+/* IMPORTANT */
+#important-container {
+  width: 40%;
+  display: flex;
+  flex-direction: column;
+  height: 500px;
+  border: 1px solid #333;
+  background: #1a1a1a;
+  color: #eee;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+#important-header {
+  background: #222;
+  padding: 10px 14px;
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px solid #333;
+}
+
+#important-messages {
+  flex: 1;
+  padding: 10px;
+  overflow-y: auto;
+}
+
+.important-item {
+  margin-bottom: 8px;
+  padding: 6px 8px;
+  background: #2a2a2a;
+  border-radius: 4px;
+  border-left: 4px solid gold;
+}
+
+.important-user {
+  font-weight: bold;
+  color: gold;
+}
+</style>
+
+<!-- ========================= JS ========================= -->
+<script>
+/* IDENTITÉ RP */
+let TCHAT_USER = null;
+
+function tchat_checkIdentity() {
+  const nom = localStorage.getItem("tchat_nom");
+  const surnom = localStorage.getItem("tchat_surnom");
+
+  if (!nom || !surnom) {
+    document.getElementById("tchat-login-overlay").style.display = "flex";
+    return false;
+  }
+
+  TCHAT_USER = `${surnom} (${nom})`;
+  return true;
+}
+
+function tchat_validateIdentity() {
+  const nom = document.getElementById("tchat-nom").value.trim();
+  const surnom = document.getElementById("tchat-surnom").value.trim();
+
+  if (!nom || !surnom) return;
+
+  localStorage.setItem("tchat_nom", nom);
+  localStorage.setItem("tchat_surnom", surnom);
+
+  TCHAT_USER = `${surnom} (${nom})`;
+
+  document.getElementById("tchat-login-overlay").style.display = "none";
+
+  initPage();
+}
+
+/* PROTECTION INIT */
+let TCHAT_INITIALIZED = false;
+let ENTER_BINDED = false;
+
+/* VARIABLES */
+let tchat_lastTimestamp = 0;
+let tchat_refresh_interval = null;
+let important_refresh_interval = null;
+
+/* SON */
+function tchat_playSound() {
+  const audio = document.getElementById("tchat-sound");
+  if (audio) audio.play().catch(() => {});
+}
+
+/* AFFICHAGE */
+function tchat_displayMessage(m) {
+  const container = document.getElementById("tchat-messages");
+  if (!container) return;
+
+  if (document.querySelector(`[data-ts="${m.date}"]`)) return;
+
+  tchat_playSound();
+
+  const div = document.createElement("div");
+  div.className = "tchat-message" + (m.important ? " tchat-important" : "");
+  div.dataset.ts = m.date;
+  div.innerHTML = `<b>${m.user}</b> : ${m.message}`;
+
+  container.appendChild(div);
+
+  if (m.date > tchat_lastTimestamp) {
+    tchat_lastTimestamp = m.date;
+  }
+
+  container.scrollTop = container.scrollHeight;
+}
+
+/* ENVOI NORMAL */
+function tchat_sendMessage() {
+  const input = document.getElementById("tchat-message-input");
+  if (!input) return;
+
+  const msg = input.value.trim();
+  if (!msg) return;
+
+  input.value = "";
+
+  google.script.run
+    .withSuccessHandler(() => input.focus())
+    .withFailureHandler(err => console.error(err))
+    .tchat_send(TCHAT_USER, msg);
+}
+
+/* ENVOI IMPORTANT */
+function tchat_sendImportant() {
+  const input = document.getElementById("tchat-message-input");
+  if (!input) return;
+
+  const msg = input.value.trim();
+  if (!msg) return;
+
+  input.value = "";
+
+  google.script.run
+    .withSuccessHandler(() => {
+      input.focus();
+      important_load();
+    })
+    .withFailureHandler(err => console.error(err))
+    .tchat_sendImportant(TCHAT_USER, msg, "important");
+}
+
+/* CHARGEMENT INITIAL */
+function tchat_loadAll() {
+  google.script.run
+    .withSuccessHandler(list => list.forEach(m => tchat_displayMessage(m)))
+    .withFailureHandler(err => console.error(err))
+    .tchat_listAll();
+}
+
+/* REFRESH */
+function tchat_refresh() {
+  google.script.run
+    .withSuccessHandler(list => list.forEach(m => tchat_displayMessage(m)))
+    .withFailureHandler(err => console.error(err))
+    .tchat_listNew(tchat_lastTimestamp);
+}
+
+/* IMPORTANT */
+function important_display(list) {
+  const container = document.getElementById("important-messages");
+  if (!container) return;
+
+  container.innerHTML = "";
+
+  list.forEach(m => {
+    const div = document.createElement("div");
+    div.className = "important-item";
+    div.innerHTML = `<b>${m.user}</b> : ${m.message}`;
+    container.appendChild(div);
+  });
+
+  container.scrollTop = container.scrollHeight;
+}
+
+function important_load() {
+  google.script.run
+    .withSuccessHandler(list => important_display(list))
+    .withFailureHandler(err => console.error(err))
+    .tchat_listImportant();
+}
+
+/* ENTER */
+function tchat_bindEnter() {
+  if (ENTER_BINDED) return;
+
+  const input = document.getElementById("tchat-message-input");
+
+  if (!input) {
+    setTimeout(tchat_bindEnter, 100);
+    return;
+  }
+
+  input.addEventListener("keydown", e => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      tchat_sendMessage();
+    }
+  });
+
+  ENTER_BINDED = true;
+}
+
+/* INIT PAGE */
+function initPage() {
+  if (!tchat_checkIdentity()) return;
+  if (TCHAT_INITIALIZED) return;
+
+  const waitDOM = setInterval(() => {
+    const input = document.getElementById("tchat-message-input");
+    const messages = document.getElementById("tchat-messages");
+
+    if (input && messages) {
+      clearInterval(waitDOM);
+
+      TCHAT_INITIALIZED = true;
+
+      tchat_bindEnter();
+      tchat_loadAll();
+      important_load();
+
+      tchat_refresh_interval = setInterval(tchat_refresh, 1000);
+      important_refresh_interval = setInterval(important_load, 2000);
+    }
+  }, 100);
+}
+</script>

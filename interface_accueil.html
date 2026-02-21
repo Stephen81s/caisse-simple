@@ -1,0 +1,73 @@
+<!-- ********************************************************************
+     interface_accueil.html — Page d’accueil RP
+     --------------------------------------------------------------------
+     Rôle :
+       - Page d’accueil affichée dans l’iframe principale
+       - Présentation simple, propre et immersive
+       - Compatible avec index.html SANS router dynamique
+       - Contient image, boutons et liens externes
+
+     Auteur : Stephen
+     Version : 2.2.0
+********************************************************************* -->
+
+<div id="interface_accueil" class="interface home-wrapper">
+
+    <!-- ============================================================
+         🖼️ LOGO / IMAGE PRINCIPALE
+    ============================================================ -->
+    <div class="home-image-box">
+        <img
+            src="https://i.postimg.cc/PqxXzHFG/Gemini-Generated-Image-kvyr34kvyr34kvyr-removebg.png"
+            alt="Logo Le consortium"
+            class="home-image"
+        >
+    </div>
+
+    <!-- ============================================================
+         📄 CONTENU PRINCIPAL
+    ============================================================ -->
+    <section class="home-content">
+
+        <h1 class="home-title">Le consortium</h1>
+
+        <p class="home-subtext">
+            Bienvenue dans l’interface de gestion RP.<br>
+            Choisissez une section ou visitez nos réseaux.
+        </p>
+
+        <!-- ============================================================
+             🔘 BOUTONS DE NAVIGATION (VERSION IFRAME)
+        ============================================================ -->
+        <div class="home-buttons">
+          
+             <button onclick="openPage('interface_caisse')">📦 Ouvrir la caisse</button>
+            <!-- <a href="ticket.html"><button class="home-btn">🎟️ Ticket Loterie</button></a> -->
+            <!-- <a href="ressource.html"><button class="home-btn">🟨 Ressource</button></a> -->
+            <!-- <a href="service.html"><button class="home-btn">🟪 Service</button></a> -->
+        </div>
+
+        <!-- ============================================================
+             🔗 LIENS EXTERNES
+        ============================================================ -->
+        <div class="home-links">
+            <a href="https://www.youtube.com/@lcdstef" target="_blank" class="home-link yt">▶️ YouTube</a>
+            <a href="https://www.twitch.tv/lcdstef" target="_blank" class="home-link twitch">🎮 Twitch</a>
+            <a href="https://www.tiktok.com/@lcdstef/video/7484324384115625238" target="_blank" class="home-link tiktok">🎵 TikTok</a>
+            <a href="https://discord.gg/8fJFMs5eXK" target="_blank" class="home-link discord">💬 Discord</a>
+            <a href="https://streamlabs.com/lcdstef" target="_blank" class="home-link streamlabs">💸 Streamlabs</a>
+        </div>
+
+    </section>
+
+</div>
+
+<!-- ============================================================
+     🧪 LOGS DE CHARGEMENT
+============================================================ -->
+<script>
+    console.log("🏠 [interface_accueil] Page d’accueil chargée dans l’iframe.");
+    window.addEventListener("load", () => {
+        console.log("🏠 [interface_accueil] DOM entièrement chargé.");
+    });
+</script>

@@ -1,0 +1,112 @@
+<!-- ********************************************************************
+     FILE        : blocage_validation.html
+     MODULE      : CAISSE — CONTRÔLE MÉTIER (BLOCAGE VALIDATION)
+     AUTHOR      : Stephen
+     VERSION     : 3.1.0 — PRO GTARP (ASYNC SAFE INIT)
+     --------------------------------------------------------------------
+     DESCRIPTION :
+       - Vérifie les stocks avant validation d’une opération
+       - Bloque la validation si un article est en rupture
+       - Ne s’active que sur la page caisse
+       - Ne modifie jamais initPage()
+       - Attente asynchrone du DOM pour compatibilité Apps Script
+       - Aucun impact sur les autres pages
+********************************************************************* -->
+
+<script>
+/* ============================================================
+   🧩 MODULE MÉTIER : initBlocageValidation()
+   ------------------------------------------------------------
+   - Active le contrôle métier uniquement si le bouton
+     #validerCaisse existe dans le DOM
+   - Vérifie les stocks via trouverArticle() (module caisse_gs)
+   - Bloque la validation si stock <= 0
+============================================================ */
+function initBlocageValidation() {
+
+    const btn = document.getElementById("validerCaisse");
+
+    if (!btn) {
+        console.log("🟨 [blocage_validation] Pas sur la page caisse → module inactif.");
+        return;
+    }
+
+    console.log("🟦 [blocage_validation] Module actif sur la page caisse.");
+
+    btn.addEventListener("click", () => {
+
+        console.log("🟦 [blocage_validation] Vérification des stocks…");
+
+        const typeOp = document.getElementById("typeOperation").value.toUpperCase();
+
+        // Vérification uniquement pour VENTE / DESTOCK
+        if (typeOp === "VENTE" || typeOp === "DESTOCK") {
+
+            let erreurStock = false;
+            let articlesEnErreur = [];
+
+            document.querySelectorAll(".ligne-article").forEach(ligne => {
+
+                const nomArticle = ligne.querySelector(".articleInput").value.trim();
+
+                // Utilise la fonction du module caisse_gs.html
+                const article = typeof trouverArticle === "function"
+                    ? trouverArticle(nomArticle)
+                    : null;
+
+                if (article && Number(article.stock) <= 0) {
+                    erreurStock = true;
+                    articlesEnErreur.push(article.nom);
+                    console.warn(`🟥 [blocage_validation] Stock insuffisant pour : ${article.nom}`);
+                }
+            });
+
+            if (erreurStock) {
+                alert(
+                    "❌ Validation impossible.\n\n" +
+                    "Les articles suivants ont un stock à 0 ou négatif :\n" +
+                    articlesEnErreur.join(", ") +
+                    "\n\nOpération bloquée."
+                );
+
+                console.error("🟥 [blocage_validation] Validation bloquée (stock insuffisant).");
+                return; // ❌ On bloque la validation
+            }
+        }
+
+        console.log("🟩 [blocage_validation] Stocks valides → validation autorisée.");
+    });
+}
+
+
+
+/* ============================================================
+   🔗 HOOK D’INITIALISATION — VERSION PRO GTARP
+   ------------------------------------------------------------
+   Objectif :
+     - Ne jamais override initPage()
+     - Ne jamais exécuter trop tôt
+     - Attendre que le DOM de la caisse soit prêt
+     - Activer ensuite initBlocageValidation()
+
+   Fonctionnement :
+     - On attend que #validerCaisse existe
+     - On attend que les scripts de la page soient chargés
+     - On active le module proprement
+============================================================ */
+(function waitForCaisseDOM() {
+
+    // Vérifier que le DOM de la caisse est présent
+    const btn = document.getElementById("validerCaisse");
+
+    if (!btn) {
+        console.log("🟨 [blocage_validation] DOM caisse incomplet → retry…");
+        return setTimeout(waitForCaisseDOM, 100);
+    }
+
+    // DOM prêt → activation
+    console.log("🟦 [blocage_validation] Hook DOM prêt → activation…");
+    initBlocageValidation();
+
+})();
+</script>

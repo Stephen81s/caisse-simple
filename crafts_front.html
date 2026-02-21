@@ -1,0 +1,220 @@
+<!-- ********************************************************************
+     Fichier : crafts_front.html
+     Module  : Logique FRONT du système de craft (GTARP)
+     Auteur  : Stephen
+     Version : 4.7.0 — PRO GTARP
+----------------------------------------------------------------------
+     RÔLE :
+       - Gère l’affichage dynamique des crafts (purs + finis)
+       - Déclenche les appels backend (getCraftsData, craftItem)
+       - Met à jour les quantités et les ingrédients calculés
+       - Affiche les pop-ups de confirmation / erreur
+       - Expose initPage() pour être appelé par le fragment
+----------------------------------------------------------------------
+     LOGGING :
+       Tous les logs sont préfixés :
+         🟦 [craft_front] → actions front
+         🟩 [craft_front] → succès
+         ❌ [craft_front] → erreurs
+********************************************************************* -->
+
+<script>
+
+/* ============================================================
+   🔥 POP-UP STYLÉ — Version PRO
+============================================================ */
+function showPopup(message, success = true) {
+    const box = document.getElementById("popup-message");
+
+    if (!box) {
+        console.warn("⚠️ [craft_front] Impossible d'afficher le popup : élément introuvable.");
+        return;
+    }
+
+    box.style.display = "block";
+    box.style.background = success ? "#2e7d32" : "#8b0000";
+    box.textContent = message;
+
+    setTimeout(() => {
+        box.style.display = "none";
+    }, 3500);
+}
+
+
+
+/* ============================================================
+   🔥 initPage() — Chargement initial des données
+   Appelé automatiquement par le fragment après injection
+============================================================ */
+function initPage() {
+    console.log("🟦 [craft_front] initPage() → chargement des données de craft…");
+
+    google.script.run
+        .withSuccessHandler(buildCraftUI)
+        .withFailureHandler(err => {
+            console.error("❌ [craft_front] Erreur getCraftsData :", err);
+            showPopup("Erreur lors du chargement des crafts.", false);
+        })
+        .getCraftsData();
+}
+
+// 🔥 Exposition globale obligatoire
+window.initPage = initPage;
+
+
+
+/* ============================================================
+   🔥 Construction de l’UI — Génération des cartes
+============================================================ */
+function buildCraftUI(data) {
+
+    console.log("🟩 [craft_front] Données reçues :", data);
+
+    if (!data || !data.produits_purs || !data.produits_finis) {
+        console.error("❌ [craft_front] Données invalides :", data);
+        showPopup("Erreur : données de craft invalides.", false);
+        return;
+    }
+
+    const itemMap = {};
+    [...data.produits_purs, ...data.produits_finis].forEach(i => {
+        itemMap[i.craft] = i;
+    });
+
+    function craftCard(item) {
+
+        const ingredients = item.ingredients
+            .map(i => `${i[0]} (${i[1]})`)
+            .join(", ");
+
+        return `
+            <div class="craft-item" data-craft="${item.craft}">
+                <img src="${item.img}" class="craft-img">
+                <div class="craft-info">
+                    <h3>${item.name}</h3>
+
+                    <div class="ingredients-line">
+                        <span class="ingredients-label">Ingrédients :</span>
+                        <span class="ingredients-list">${ingredients}</span>
+                    </div>
+
+                    <div class="ingredients-calc"></div>
+
+                    <div class="qty-selector">
+                        <button class="qty-btn minus">−</button>
+                        <input type="number" class="qty-input" value="1" min="1">
+                        <button class="qty-btn plus">+</button>
+                    </div>
+
+                    <button class="craft-btn">🛠 Craft</button>
+                </div>
+            </div>
+        `;
+    }
+
+    // Répartition
+    const alcoolsFortsPur = data.produits_purs.slice(0, 4);
+    const alcoolsFortsFini = data.produits_finis.slice(0, 4);
+
+    const bieresPur = data.produits_purs.slice(4, 7);
+    const bieresFini = data.produits_finis.slice(4, 7);
+
+    document.getElementById("pur-1").innerHTML =
+        alcoolsFortsPur.map(craftCard).join("");
+
+    document.getElementById("fini-1").innerHTML =
+        alcoolsFortsFini.map(craftCard).join("");
+
+    document.getElementById("pur-2").innerHTML =
+        bieresPur.map(craftCard).join("");
+
+    document.getElementById("fini-2").innerHTML =
+        bieresFini.map(craftCard).join("");
+
+    console.log("🟩 [craft_front] UI générée, activation des boutons…");
+
+    activateCraftButtons(itemMap);
+}
+
+
+
+/* ============================================================
+   🔥 Mise à jour dynamique des ingrédients selon la quantité
+============================================================ */
+function updateIngredientsCalc(item, qty, container) {
+    const parts = item.ingredients.map(i => `${i[0]} × ${i[1] * qty}`);
+    container.textContent = `Pour ${qty} → ${parts.join(", ")}`;
+}
+
+
+
+/* ============================================================
+   🔥 Activation des boutons de craft
+============================================================ */
+function activateCraftButtons(itemMap) {
+
+    document.querySelectorAll(".craft-item").forEach(item => {
+
+        const minus = item.querySelector(".minus");
+        const plus = item.querySelector(".plus");
+        const input = item.querySelector(".qty-input");
+        const calcBox = item.querySelector(".ingredients-calc");
+
+        const craftName = item.dataset.craft;
+        const itemData = itemMap[craftName];
+
+        if (!itemData) {
+            console.error("❌ [craft_front] Données introuvables pour :", craftName);
+            return;
+        }
+
+        updateIngredientsCalc(itemData, Number(input.value), calcBox);
+
+        minus.addEventListener("click", () => {
+            input.value = Math.max(1, Number(input.value) - 1);
+            updateIngredientsCalc(itemData, Number(input.value), calcBox);
+        });
+
+        plus.addEventListener("click", () => {
+            input.value = Number(input.value) + 1;
+            updateIngredientsCalc(itemData, Number(input.value), calcBox);
+        });
+
+        input.addEventListener("input", () => {
+            const qty = Math.max(1, Number(input.value));
+            input.value = qty;
+            updateIngredientsCalc(itemData, qty, calcBox);
+        });
+
+        /* ============================================================
+           🔥 APPEL BACKEND — craftItem()
+        ============================================================ */
+        item.querySelector(".craft-btn").addEventListener("click", () => {
+
+            const qty = Number(input.value);
+
+            console.log(`🟦 [craft_front] Craft demandé : ${craftName} × ${qty}`);
+
+            google.script.run
+                .withSuccessHandler(res => {
+
+                    console.log("🟩 [craft_front] Réponse backend :", res);
+
+                    if (res.status === "OK") {
+                        showPopup(res.message, true);
+                    } else {
+                        showPopup(res.message, false);
+                    }
+                })
+                .withFailureHandler(err => {
+                    console.error("❌ [craft_front] Erreur interne :", err);
+                    showPopup("❌ Erreur interne : " + err.message, false);
+                })
+                .craftItem(craftName, qty);
+        });
+    });
+
+    console.log("🟩 [craft_front] Tous les boutons sont opérationnels.");
+}
+
+</script>

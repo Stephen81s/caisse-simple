@@ -1,0 +1,252 @@
+<!-- ********************************************************************
+     FILE    : caisse_ligne_article.html
+     MODULE  : FRONT — CAISSE RP (GESTION DES LIGNES)
+     AUTHOR  : Stephen
+     VERSION : 4.7.1 — PRO GTARP (PRIX DYNAMIQUES + COULEURS + BOUTON OK)
+********************************************************************* -->
+
+<script>
+console.log("🟦 [caisse_lignes] Module lignes articles chargé.");
+
+
+
+/* ============================================================
+   🔍 Attente du template (DOM READY)
+============================================================ */
+function attendreTemplate(callback) {
+
+    let essais = 0;
+
+    const check = () => {
+        const tpl = document.getElementById("template-ligne-article");
+
+        if (tpl) {
+            console.log("🟩 [caisse_lignes] Template détecté.");
+            return callback(tpl);
+        }
+
+        essais++;
+
+        if (essais < 20) {
+            console.log("🟨 [caisse_lignes] Template non trouvé → retry…");
+            return setTimeout(check, 50);
+        }
+
+        console.error("🟥 [caisse_lignes] Template introuvable après 1s → abandon.");
+    };
+
+    check();
+}
+
+
+
+/* ============================================================
+   💰 Prix selon type d’opération
+============================================================ */
+function getPrixSelonOperation(article) {
+
+    const typeOp = document.getElementById("typeOperation")?.value;
+
+    if (!article || !typeOp) return 0;
+
+    switch (typeOp.toUpperCase()) {
+        case "VENTE": return article.prixVente || 0;
+        case "ACHAT": return article.prixAchat || 0;
+        default: return 0;
+    }
+}
+
+
+
+/* ============================================================
+   ➕ AJOUT D’UNE LIGNE ARTICLE
+============================================================ */
+function ajouterLigneArticle() {
+
+    console.log("🟦 [caisse_lignes] Ajout d’une nouvelle ligne…");
+
+    attendreTemplate(template => {
+
+        const clone = template.content.cloneNode(true);
+        const container = document.getElementById("lignesReelles");
+
+        if (!container) {
+            console.error("🟥 [caisse_lignes] #lignesReelles introuvable.");
+            return;
+        }
+
+        const ligne = clone.querySelector(".ligne-article");
+
+        if (!ligne) {
+            console.error("🟥 [caisse_lignes] .ligne-article introuvable dans le template.");
+            return;
+        }
+
+        initialiserListenersLigne(ligne);
+
+        container.appendChild(clone);
+
+        console.log("🟩 [caisse_lignes] Ligne article ajoutée.");
+    });
+}
+
+
+
+/* ============================================================
+   🎛️ Initialisation des listeners d’une ligne
+============================================================ */
+function initialiserListenersLigne(ligne) {
+
+    /* ARTICLE */
+    ligne.querySelector(".articleInput").addEventListener("input", (e) => {
+        const article = trouverArticle(e.target.value);
+
+        if (article) {
+            const prix = getPrixSelonOperation(article);
+            ligne.querySelector(".prixUnitaire").value = prix;
+
+            if (typeof appliquerCouleurLigne === "function") {
+                appliquerCouleurLigne(ligne, article);
+            }
+
+            console.log(`🟩 [caisse_lignes] Article trouvé : ${article.nom} → PU ${prix}`);
+        } else {
+            ligne.querySelector(".prixUnitaire").value = "";
+            console.log("🟨 [caisse_lignes] Aucun article correspondant.");
+        }
+
+        calculerTotalLigne(ligne);
+    });
+
+    /* QUANTITÉ */
+    ligne.querySelector(".quantite").addEventListener("input", () => {
+        calculerTotalLigne(ligne);
+    });
+
+    /* REMISE */
+    ligne.querySelector(".remiseMontant").addEventListener("input", () => {
+        calculerTotalLigne(ligne);
+    });
+
+    ligne.querySelector(".remiseType").addEventListener("change", () => {
+        calculerTotalLigne(ligne);
+    });
+
+    /* DUPLIQUER */
+    ligne.querySelector(".dupliquerLigne").addEventListener("click", () => {
+        ajouterLigneArticle();
+    });
+
+    /* SUPPRIMER */
+    ligne.querySelector(".supprimerLigne").addEventListener("click", () => {
+        ligne.remove();
+        calculerTotalGlobal();
+    });
+}
+
+
+
+/* ============================================================
+   🧮 Calcul total ligne
+============================================================ */
+function calculerTotalLigne(ligne) {
+
+    const pu = parseFloat(ligne.querySelector(".prixUnitaire").value) || 0;
+    const qte = parseFloat(ligne.querySelector(".quantite").value) || 1;
+    const remise = parseFloat(ligne.querySelector(".remiseMontant").value) || 0;
+    const typeRemise = ligne.querySelector(".remiseType").value;
+
+    let total = pu * qte;
+
+    if (typeRemise === "%") total -= total * (remise / 100);
+    else total -= remise;
+
+    if (total < 0) total = 0;
+
+    ligne.querySelector(".totalLigne").value = total.toFixed(2);
+
+    calculerTotalGlobal();
+}
+
+
+
+/* ============================================================
+   🚚 Calcul livraison
+============================================================ */
+function calculerLivraison(totalArticles) {
+
+    const montant = parseFloat(document.getElementById("livraisonMontant").value) || 0;
+    const type = document.getElementById("livraisonType").value;
+
+    if (type === "%") {
+        return totalArticles * (montant / 100);
+    }
+
+    return montant;
+}
+
+
+
+/* ============================================================
+   🧮 Calcul total global
+============================================================ */
+function calculerTotalGlobal() {
+
+    let totalArticles = 0;
+
+    document.querySelectorAll(".ligne-article").forEach(ligne => {
+        totalArticles += parseFloat(ligne.querySelector(".totalLigne").value) || 0;
+    });
+
+    const totalLivraison = calculerLivraison(totalArticles);
+    const totalFinal = totalArticles + totalLivraison;
+
+    document.getElementById("totalArticle").textContent = totalFinal.toFixed(2);
+
+    console.log(`🟩 [caisse_lignes] Total final mis à jour : ${totalFinal.toFixed(2)} €`);
+}
+
+
+
+/* ============================================================
+   🔄 Recalcul si type d’opération change
+============================================================ */
+document.getElementById("typeOperation")?.addEventListener("change", () => {
+
+    console.log("🟦 [caisse_lignes] Type d’opération modifié → recalcul…");
+
+    document.querySelectorAll(".ligne-article").forEach(ligne => {
+
+        const article = trouverArticle(ligne.querySelector(".articleInput").value);
+
+        if (article) {
+            ligne.querySelector(".prixUnitaire").value = getPrixSelonOperation(article);
+
+            if (typeof appliquerCouleurLigne === "function") {
+                appliquerCouleurLigne(ligne, article);
+            }
+        }
+
+        calculerTotalLigne(ligne);
+    });
+
+    console.log("🟩 [caisse_lignes] Recalcul terminé.");
+});
+
+
+
+/* ============================================================
+   🎬 Bouton : Ajouter une ligne (FIX)
+============================================================ */
+document.getElementById("ajouterLigne")?.addEventListener("click", () => {
+    console.log("🟦 [caisse_lignes] Bouton Ajouter une ligne cliqué.");
+    ajouterLigneArticle();
+});
+
+
+
+/* ============================================================
+   📌 EXPORT GLOBAL
+============================================================ */
+window.ajouterLigneArticle = ajouterLigneArticle;
+</script>
