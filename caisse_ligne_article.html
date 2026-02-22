@@ -97,22 +97,37 @@ function ajouterLigneArticle() {
 ============================================================ */
 function initialiserListenersLigne(ligne) {
 
+    const prixInput = ligne.querySelector(".prixUnitaire");
+
     /* ARTICLE */
     ligne.querySelector(".articleInput").addEventListener("input", (e) => {
         const article = trouverArticle(e.target.value);
 
         if (article) {
             const prix = getPrixSelonOperation(article);
-            ligne.querySelector(".prixUnitaire").value = prix;
+
+            if (prix === 0) {
+                // 🔥 Prix libre
+                prixInput.value = "";
+                prixInput.placeholder = "Prix libre";
+                prixInput.disabled = false;
+
+            } else {
+                // Prix fixe
+                prixInput.value = prix;
+                prixInput.disabled = true;
+                prixInput.placeholder = "";
+            }
 
             if (typeof appliquerCouleurLigne === "function") {
                 appliquerCouleurLigne(ligne, article);
             }
 
-            console.log(`🟩 [caisse_lignes] Article trouvé : ${article.nom} → PU ${prix}`);
         } else {
-            ligne.querySelector(".prixUnitaire").value = "";
-            console.log("🟨 [caisse_lignes] Aucun article correspondant.");
+            // Aucun article → prix libre par défaut
+            prixInput.value = "";
+            prixInput.placeholder = "Prix libre";
+            prixInput.disabled = false;
         }
 
         calculerTotalLigne(ligne);
@@ -129,6 +144,11 @@ function initialiserListenersLigne(ligne) {
     });
 
     ligne.querySelector(".remiseType").addEventListener("change", () => {
+        calculerTotalLigne(ligne);
+    });
+
+    /* 🔥 PRIX UNITAIRE (prix libre) — LE FIX CRITIQUE */
+    prixInput.addEventListener("input", () => {
         calculerTotalLigne(ligne);
     });
 

@@ -1,127 +1,100 @@
-/********************************************************************
- * FILE    : lire_sheet.gs
- * MODULE  : GTARP - LECTURE DES FEUILLES GOOGLE SHEETS
- * AUTHOR  : Stephen
- * VERSION : 8.0.4 - SAFE VERSION (NO UTF8 RISKS)
- ********************************************************************/
+/********************************************************************************************
+ * MODULE : LECTURES MÉTIER — PRO 2026
+ * Fournit toutes les fonctions nécessaires à lireCaisseEntiere()
+ ********************************************************************************************/
 
-console.log("[lire_sheet] Module charge - version 8.0.4");
+console.log("📘 [lire_sheet] Chargement des fonctions lireXXX()…");
 
-/* ====================================================================
-   LECTURE GENERIQUE D UNE FEUILLE
-==================================================================== */
-function lireFeuille(nomFeuille) {
-  try {
-    const sheet = SpreadsheetApp.getActive().getSheetByName(nomFeuille);
-    if (!sheet) throw new Error("Feuille introuvable : " + nomFeuille);
+/* ============================================================
+   📄 Lire les types d’opérations
+============================================================ */
+function lireTypesOperations() {
+  console.log("📘 [lireTypesOperations] Lecture…");
 
-    const data = sheet.getDataRange().getValues();
-    console.log("[lire_sheet] Feuille lue :", nomFeuille, "->", data.length, "lignes");
+  const sheet = SpreadsheetApp.getActive().getSheetByName(FEUILLE_TYPES_OP);
+  const values = sheet.getRange(2, 1, sheet.getLastRow() - 1, 1).getValues();
 
-    return data;
-
-  } catch (err) {
-    console.error("[lire_sheet] Erreur lireFeuille(", nomFeuille, "):", err);
-    throw err;
-  }
+  const result = values.flat().filter(v => v);
+  console.log("🟩 [lireTypesOperations] Types :", result);
+  return result;
 }
 
-/* ====================================================================
-   API PUBLIQUE - LECTURE DES MONTANTS DE CAISSE
-==================================================================== */
-function getMontantsCaisses() {
-  try {
-    console.log("[lire_sheet] getMontantsCaisses() appele");
+/* ============================================================
+   👥 Lire les employés
+============================================================ */
+function lireEmployes() {
+  console.log("📘 [lireEmployes] Lecture…");
 
-    const ss = SpreadsheetApp.getActive();
-    const sheet = ss.getSheetByName(FEUILLE_COMPTA);
+  const sheet = SpreadsheetApp.getActive().getSheetByName(FEUILLE_EMPLOYES);
+  const values = sheet.getRange(2, 1, sheet.getLastRow() - 1, 5).getValues();
 
-    if (!sheet) {
-      throw new Error("Feuille COMPTA introuvable : " + FEUILLE_COMPTA);
-    }
+  const result = values.map(r => ({
+    id: r[0],
+    nom: r[1],
+    prenom: r[2],
+    role: r[3],
+    entreprise: r[4]
+  }));
 
-    const result = {
-      global:       Number(sheet.getRange("B1").getValue()) || 0,
-      illegale:     Number(sheet.getRange(BANQUE_MAPPING["Illegal"]).getValue()) || 0,
-      tequilalala:  Number(sheet.getRange(BANQUE_MAPPING["Tequilalala"]).getValue()) || 0,
-      downtown:     Number(sheet.getRange(BANQUE_MAPPING["DowntownCabCo"]).getValue()) || 0,
-      weazelnews:   Number(sheet.getRange(BANQUE_MAPPING["WeazelNews"]).getValue()) || 0
-    };
-
-    console.log("[lire_sheet] Montants renvoyes :", result);
-    return result;
-
-  } catch (err) {
-    console.error("[lire_sheet] ERREUR getMontantsCaisses :", err);
-    throw err;
-  }
+  console.log("🟩 [lireEmployes] Employés :", result.length);
+  return result;
 }
 
-/* ====================================================================
-   API PUBLIQUE - LECTURE DIRECTE DES TICKETS
-==================================================================== */
-function lireTicketsDirect() {
-  console.log("[api_tickets] Appel public -> lireTicketsDirect()");
-  return lireTicketsDirectInternal();
+/* ============================================================
+   📞 Lire l’annuaire
+============================================================ */
+function lireAnnuaire() {
+  console.log("📘 [lireAnnuaire] Lecture…");
+
+  const sheet = SpreadsheetApp.getActive().getSheetByName(FEUILLE_ANNUAIRE);
+  const values = sheet.getRange(2, 1, sheet.getLastRow() - 1, 3).getValues();
+
+  const result = values.map(r => ({
+    nom: r[0],
+    prenom: r[1],
+    telephone: r[2]
+  }));
+
+  console.log("🟩 [lireAnnuaire] Contacts :", result.length);
+  return result;
 }
 
-/* ====================================================================
-   ALIAS — getAllTickets() pour compatibilité API
-==================================================================== */
-function getAllTickets() {
-  console.log("[lire_sheet] getAllTickets() -> alias vers lireTicketsDirect()");
-  return lireTicketsDirect();
+/* ============================================================
+   💳 Lire les moyens de paiement
+============================================================ */
+function lireMoyensPaiement() {
+  console.log("📘 [lireMoyensPaiement] Lecture…");
+
+  const sheet = SpreadsheetApp.getActive().getSheetByName(FEUILLE_MOYENS_PAIEMENT);
+  const values = sheet.getRange(2, 1, sheet.getLastRow() - 1, 1).getValues();
+
+  const result = values.flat().filter(v => v);
+  console.log("🟩 [lireMoyensPaiement] Moyens :", result);
+  return result;
 }
 
-/* ====================================================================
-   LECTURE INTERNE - TABLEAU D OBJETS
-==================================================================== */
-function lireTicketsDirectInternal() {
-  console.log("[lire_sheet] lireTicketsDirectInternal() -> DEMARRAGE");
+/* ============================================================
+   📦 Lire les articles
+============================================================ */
+function lireArticles() {
+  console.log("📘 [lireArticles] Lecture…");
 
-  const sheet = SpreadsheetApp.getActive().getSheetByName(FEUILLE_TICKETS);
-  if (!sheet) {
-    console.error("[lire_sheet] ERREUR : Feuille introuvable :", FEUILLE_TICKETS);
-    return [];
-  }
+  const sheet = SpreadsheetApp.getActive().getSheetByName(FEUILLE_ARTICLES);
+  const values = sheet.getRange(2, 1, sheet.getLastRow() - 1, 8).getValues();
 
-  const data = sheet.getDataRange().getValues();
-  console.log("[lire_sheet] Lignes brutes lues :", data.length);
+  const result = values.map(r => ({
+    nom: r[0],
+    prixAchat: r[1],
+    prixVente: r[2],
+    stock: r[3],
+    categorie: r[4],
+    typeCaisse: r[5],
+    types: r[6],
+    entreprise: r[7]
+  }));
 
-  const lignes = [];
-
-  for (let i = 1; i < data.length; i++) {
-    const r = data[i];
-
-    console.log("[lire_sheet] Ligne brute", i, ":", JSON.stringify(r));
-
-    const isEmpty = r.every(cell => cell === "" || cell === null || cell === undefined);
-    if (isEmpty) {
-      console.warn("[lire_sheet] Ligne", i, "ignoree (vide)");
-      continue;
-    }
-
-    const ticket = {
-      id:            r[COL_TICKETS.TicketID - 1],
-      client:        r[COL_TICKETS.Client - 1],
-      vendeur:       r[COL_TICKETS.Vendeur - 1],
-      dateAchat:     r[COL_TICKETS.DateAchat - 1],
-      dateRevelation:r[COL_TICKETS.DateRevelation - 1],
-      rarete:        r[COL_TICKETS.Rarete - 1],
-      gain:          r[COL_TICKETS.Gain - 1],
-      status:        r[COL_TICKETS.Status - 1],
-      dateValidation:r[COL_TICKETS.DateValidation - 1],
-      validateur:    r[COL_TICKETS.Validateur - 1],
-      messageID:     r[COL_TICKETS.MessageID - 1],
-      ChanelID:      r[COL_TICKETS.ChanelID - 1],
-      couleurEmbed:  r[COL_TICKETS.CouleurEmbed - 1],
-      noteAdmin:     r[COL_TICKETS.NoteAdmin - 1]
-    };
-
-    console.log("[lire_sheet] Ticket", i, "->", JSON.stringify(ticket));
-    lignes.push(ticket);
-  }
-
-  console.log("[lire_sheet] Tickets renvoyes :", lignes.length);
-  return lignes;
+  console.log("🟩 [lireArticles] Articles :", result.length);
+  return result;
 }
+
+console.log("🟩 [lire_sheet] Toutes les fonctions lireXXX() sont opérationnelles.");

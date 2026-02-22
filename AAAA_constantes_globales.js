@@ -2,7 +2,7 @@
  * FILE    : 00_constantes_globales.gs
  * MODULE  : GTARP — CONSTANTES GLOBALES BACKEND
  * AUTHOR  : Stephen
- * VERSION : 10.1.0 — PRO 2026 (API FIX + Ultra Logs)
+ * VERSION : 10.1.1 — PRO 2026 (API FIX + Ultra Logs + BANQUE_LABELS)
  ********************************************************************************************/
 
 console.log("📘 [constantes_globales] Chargement des constantes BACKEND…");
@@ -37,10 +37,7 @@ console.log("🟦 [constantes_globales] Actions API chargées :", {
 });
 
 /* ==========================================================================================
-   � WEBHOOKS DISCORD — TYPES D'ÉVÉNEMENTS
-   ==========================================================================================
-   Ces constantes DOIVENT correspondre aux valeurs dans la feuille IDDiscord (colonne A)
-   Il y a 9 webhooks différents pour différents types d'événements
+     WEBHOOKS DISCORD — TYPES D'ÉVÉNEMENTS
 ========================================================================================== */
 const WEBHOOK_TRANSACTION_LEGAL           = "TRANSACTION_LEGALE";
 const WEBHOOK_TRANSACTION_ILLEGAL         = "TRANSACTION_ILLEGALE";
@@ -65,7 +62,7 @@ console.log("🔗 [constantes_globales] Webhooks Discord chargés :", {
 });
 
 /* ==========================================================================================
-   �📄 FEUILLES GOOGLE SHEETS
+    📄 FEUILLES GOOGLE SHEETS
 ========================================================================================== */
 const FEUILLE_ARTICLES        = "Articles";
 const FEUILLE_EMPLOYES        = "Employées";
@@ -117,13 +114,27 @@ console.log("🏢 [constantes_globales] ENTREPRISES chargées :", ENTREPRISES);
    💰 MAPPING CAISSES (BANQUE) — Cellules dans la feuille COMPTA
 ========================================================================================== */
 const BANQUE_MAPPING = {
-  "Illegal":       "B1",
-  "Tequilalala":   "B2",
-  "DowntownCabCo": "B3",
-  "WeazelNews":    "B4"
+  "Global":                 "B1",
+  "Caisse illegale":        "B2",
+  "Caisse Tequi-la-la":     "B3",
+  "Caisse Downtown Cab Co": "B4",
+  "Caisse Weazel News":     "B5"
 };
 
 console.log("💰 [constantes_globales] BANQUE_MAPPING chargés :", BANQUE_MAPPING);
+
+/* ==========================================================================================
+   🏷️ LABELS DES CAISSES — (MANQUAIT, maintenant FIX)
+========================================================================================== */
+const BANQUE_LABELS = {
+  "Global":                 "Global",
+  "Caisse illegale":        "Caisse illegale",
+  "Caisse Tequi-la-la":     "Caisse Tequi-la-la",
+  "Caisse Downtown Cab Co": "Caisse Downtown Cab Co",
+  "Caisse Weazel News":     "Caisse Weazel News"
+};
+
+console.log("🏷️ [constantes_globales] BANQUE_LABELS chargés :", BANQUE_LABELS);
 
 /* ==========================================================================================
    ✔ FIN

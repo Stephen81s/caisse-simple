@@ -3,35 +3,51 @@
  * FILE    : ticket_interface_caisse.js
  * MODULE  : CAISSE + LOTERIE + EMBEDS DISCORD
  * AUTHOR  : Stephen
- * VERSION : 6.0.0 — PRO GTARP
- * ------------------------------------------------------------------
- * RÔLE :
- *   - Gérer la validation d’une opération de caisse
- *   - Vérifier les stocks avant validation
- *   - Construire le résumé (Résumé)
- *   - Mettre à jour les stocks (Stock)
- *   - Créditer les caisses (Banque)
- *   - Déclencher les embeds Discord (Transactions)
- *   - Créer automatiquement les tickets LOTERIE
- *   - Gérer l’UX (alertes, reset, rechargement)
+ * VERSION : 6.4.2 — PRO GTARP (FIX ENTREPRISE MINUSCULE)
  ********************************************************************/
 
 console.log("🟪 [caisse_js] Module CAISSE + LOTERIE chargé…");
 
 /* =====================================================================
-   🧠 DÉTERMINER LA CAISSE À CRÉDITER
+   🧠 NORMALISATION ENTREPRISE (colonne H)
+   ===================================================================== */
+function normaliserEntreprise(ent) {
+    return (ent || "")
+        .toLowerCase()
+        .normalize("NFKD")
+        .replace(/\u00A0/g, " ")
+        .replace(/\s+/g, " ")
+        .replace(/cab\s*co/, "cab co")
+        .trim();
+}
+
+/* =====================================================================
+   🧠 MAPPING ENTREPRISE → NOM EXACT DANS COMPTA
+   ===================================================================== */
+const MAP_CAISSES = {
+    "tequi-la-la": "Caisse Tequi-la-la",
+    "downtown cab co": "Caisse Downtown Cab Co",
+    "weazel news": "Caisse Weazel News",
+    "illegal": "Caisse illégale",
+    "global": "Global"
+};
+
+/* =====================================================================
+   🧠 DÉTERMINER LA CAISSE À CRÉDITER (INTERNE)
    ===================================================================== */
 function determinerCaisse(article) {
 
-    const type = (article.typeCaisse || "").toLowerCase().trim();
-    const ent  = (article.Entreprise || "").toLowerCase().trim();
+    const ent = normaliserEntreprise(article.entreprise);
 
-    if (type === "illegal") return "Illegal";
-    if (ent.includes("tequi")) return "Tequilalala";
-    if (ent.includes("downtown")) return "DowntownCabCo";
-    if (ent.includes("weazel")) return "WeazelNews";
+    console.log("🟦 ENTREPRISE BRUTE :", article.entreprise);
+    console.log("🟦 ENTREPRISE NORMALISÉE :", ent);
 
-    return "Tequilalala";
+    if (ent.includes("illegal")) return "illegal";
+    if (ent.includes("tequi")) return "tequi-la-la";
+    if (ent.includes("downtown")) return "downtown cab co";
+    if (ent.includes("weazel")) return "weazel news";
+
+    return "tequi-la-la"; // fallback
 }
 
 /* =====================================================================
@@ -105,7 +121,8 @@ document.getElementById("validerCaisse").addEventListener("click", () => {
             quantite:     qte,
             totalArticle: total,
             paiement:     paiement,
-            typeCaisse:   typeCaisse
+            typeCaisse:   typeCaisse,
+            entreprise:   article.entreprise   // ✔ FIX CRITIQUE
         };
 
         lignesResume.push(ligneResume);
@@ -162,8 +179,8 @@ document.getElementById("validerCaisse").addEventListener("click", () => {
             pu:    ligne.prixUnitaire,
             qte:   ligne.quantite,
             total: ligne.totalArticle,
-            type:  ligne.typeCaisse === "Illegal" ? "Illégal" : "Légal",
-            entreprise: article.Entreprise
+            type:  ligne.typeCaisse === "illegal" ? "Illégal" : "Légal",
+            entreprise: article.entreprise
         });
 
         totalTransaction += ligne.totalArticle;
@@ -198,6 +215,33 @@ document.getElementById("validerCaisse").addEventListener("click", () => {
         .processTransaction(data);
 
     /* =====================================================================
+       2.10) MISE À JOUR DES TOTAUX COMPTA (PAS DE LIGNES)
+       ===================================================================== */
+
+    // Mise à jour du total Global
+    google.script.run
+        .withFailureHandler(err => {
+            console.error("❌ [caisse_js] Erreur mise à jour Global :", err);
+        })
+        .ajouterMontantCaisse("Global", totalTransaction);
+
+    // Mise à jour de la caisse spécifique (Entreprise → COMPTA)
+    lignesResume.forEach(ligne => {
+
+        const entrepriseNorm = normaliserEntreprise(ligne.entreprise);
+        const caisseCible = MAP_CAISSES[entrepriseNorm];
+
+        console.log("🟦 ENTREPRISE NORMALISÉE POUR COMPTA :", entrepriseNorm);
+        console.log("🟩 CAISSE CIBLE COMPTA :", caisseCible);
+
+        google.script.run
+            .withFailureHandler(err => {
+                console.error("❌ [caisse_js] Erreur crédit caisse :", err);
+            })
+            .ajouterMontantCaisse(caisseCible, ligne.totalArticle);
+    });
+
+    /* =====================================================================
        3) RÉSUMÉ → STOCK → CAISSE
        ===================================================================== */
     google.script.run
@@ -205,24 +249,6 @@ document.getElementById("validerCaisse").addEventListener("click", () => {
 
             google.script.run
                 .withSuccessHandler(() => {
-
-                    lignesResume.forEach(ligne => {
-
-                        const montantFinal = calculerMontantFinal(typeOp, ligne.totalArticle);
-
-                        google.script.run
-                            .withFailureHandler(err => {
-                                console.error("❌ [caisse_js] Erreur crédit caisse :", err);
-                            })
-                            .ajouterMontantCaisse(ligne.typeCaisse, montantFinal);
-                    });
-
-                    function calculerMontantFinal(typeOperation, montant) {
-                        const type = (typeOperation || "").toUpperCase().trim();
-                        if (type === "ACHAT") return -Math.abs(montant);
-                        if (type === "VENTE") return  Math.abs(montant);
-                        return 0;
-                    }
 
                     /* =====================================================================
                        5) RESET + RELOAD
@@ -235,7 +261,7 @@ document.getElementById("validerCaisse").addEventListener("click", () => {
                     if (typeof recalculerTotal === "function") recalculerTotal();
                     if (typeof chargerDonneesCaisse === "function") chargerDonneesCaisse();
 
-                    alert("✔ Vente enregistrée, stock mis à jour, caisses créditées et ticket(s) créé(s).");
+                    alert("✔ Vente enregistrée.\nRésumé OK.\nCOMPTA (totaux) OK.\nStock OK.\nCaisses OK.\nTickets OK.");
 
                 })
                 .withFailureHandler(err => {

@@ -2,11 +2,7 @@
      interface_caisse.html — Interface principale de la caisse (FRAGMENT)
      --------------------------------------------------------------------
      Auteur  : Stephen
-     Version : 4.7.0 — PRO (INITPAGE HOOK FIX)
-     Rôle    :
-       - Affichage pur de l’interface caisse
-       - Aucun appel métier interne
-       - Déclenche initPage() du module caisse_gs APRÈS réinjection des scripts
+     Version : 4.7.1 — PRO (FIX PRIX LIBRE)
 ********************************************************************* -->
 
 <div id="interface_caisse" class="page-wrapper">
@@ -47,11 +43,15 @@
 
     <h2>🧾 Articles</h2>
 
+    <!-- 🔥 FIX : suppression de readonly sur prixUnitaire -->
     <template id="template-ligne-article">
         <div class="ligne-article" style="display:flex; gap:10px; align-items:center;">
 
             <input class="articleInput" list="articlesList" placeholder="Article">
-            <input class="prixUnitaire" type="number" placeholder="PU" readonly>
+
+            <!-- ICI : readonly supprimé -->
+            <input class="prixUnitaire" type="number" placeholder="PU">
+
             <input class="quantite" type="number" min="1" value="1">
 
             <div style="display:flex; gap:5px;">
@@ -104,13 +104,6 @@
 <script>
 console.log("🟩 [interface_caisse] Interface HTML chargée.");
 
-/* ============================================================
-   🔥 HOOK D’INITIALISATION — VERSION PRO GTARP
-   ------------------------------------------------------------
-   - Appelé APRÈS réinjection des scripts
-   - Déclenche initPage() du module caisse_gs
-   - Garantit que le DOM + scripts sont prêts
-============================================================ */
 setTimeout(() => {
     if (typeof initPage === "function") {
         console.log("🟦 [interface_caisse] Appel de initPage() depuis le fragment…");

@@ -2,7 +2,7 @@
  * FILE    : banque_backend.gs
  * MODULE  : BANQUE RP — BACKEND (VERSION PRO FINALE)
  * AUTHOR  : Stephen
- * VERSION : 4.0.0 — PRO GTARP (CENTRALISÉ)
+ * VERSION : 4.1.0 — PRO GTARP (CENTRALISÉ + ENCARDS INDEX)
  ********************************************************************/
 
 console.log("🏦 [banque_backend] Initialisation du module BANQUE RP…");
@@ -69,7 +69,7 @@ function ajouterMontantCaisse(typeCaisse, montant) {
       throw new Error("❌ Feuille COMPTA introuvable : " + FEUILLE_COMPTA);
     }
 
-    const cell = sheet.getRange(cellA1);
+    const cell   = sheet.getRange(cellA1);
     const actuel = Number(cell.getValue()) || 0;
     const nouveau = actuel + Number(montant || 0);
 
@@ -77,7 +77,7 @@ function ajouterMontantCaisse(typeCaisse, montant) {
 
     console.log("🟩 [ajouterMontantCaisse] Mise à jour OK :", {
       caisse: typeCaisse,
-      cell: cellA1,
+      cell:   cellA1,
       ancien: actuel,
       nouveau: nouveau
     });
@@ -204,6 +204,34 @@ function embed_operation_banque(data) {
   }
 
   console.log("📨 [embed_operation_banque] Embed construit :", embed);
+}
+
+/* ============================================================
+   🏦 LECTURE DES MONTANTS POUR LES ENCARDS (INDEX)
+   ------------------------------------------------------------
+   Utilisé par index.html → rafraichirMontants()
+============================================================ */
+function getMontantsCaisses() {
+  console.log("🏦 [banque_backend] getMontantsCaisses() appelé…");
+
+  const sheet = SpreadsheetApp.getActive().getSheetByName(FEUILLE_COMPTA);
+  if (!sheet) {
+    throw new Error("❌ Feuille COMPTA introuvable : " + FEUILLE_COMPTA);
+  }
+
+  // A1:B5 → 5 lignes, 2 colonnes (Label, Valeur)
+  const values = sheet.getRange(1, 1, 5, 2).getValues();
+
+  const result = {
+    global:      Number(values[0][1]) || 0,
+    illegale:    Number(values[1][1]) || 0,
+    tequilalala: Number(values[2][1]) || 0,
+    downtown:    Number(values[3][1]) || 0,
+    weazelnews:  Number(values[4][1]) || 0
+  };
+
+  console.log("🏦 [banque_backend] Montants renvoyés :", result);
+  return result;
 }
 
 console.log("🏦 [banque_backend] Module BANQUE RP chargé avec succès.");
