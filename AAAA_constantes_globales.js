@@ -21,6 +21,7 @@ const FN_LIRE_ARTICLES        = "lireArticles";
 const FN_LIRE_ARTICLE_INFO    = "lireArticleInfo";
 const FN_LIRE_ANNUAIRE        = "lireAnnuaire";
 const FN_LIRE_ANNUAIRE_MAP    = "lireAnnuaireMap";
+const FN_LIRE_TICKETS         = "lireTickets";
 
 const FN_ECRIRE_CAISSE        = "ecrireCaisse";
 const FN_ECRIRE_ANNUAIRE      = "ecrireAnnuaire";
@@ -36,7 +37,35 @@ console.log("🟦 [constantes_globales] Actions API chargées :", {
 });
 
 /* ==========================================================================================
-   📄 FEUILLES GOOGLE SHEETS
+   � WEBHOOKS DISCORD — TYPES D'ÉVÉNEMENTS
+   ==========================================================================================
+   Ces constantes DOIVENT correspondre aux valeurs dans la feuille IDDiscord (colonne A)
+   Il y a 9 webhooks différents pour différents types d'événements
+========================================================================================== */
+const WEBHOOK_TRANSACTION_LEGAL           = "TRANSACTION_LEGALE";
+const WEBHOOK_TRANSACTION_ILLEGAL         = "TRANSACTION_ILLEGALE";
+const WEBHOOK_STOCK_LEGAL                 = "STOCK_LEGAL";
+const WEBHOOK_STOCK_ILLEGAL               = "STOCK_ILLEGAL";
+const WEBHOOK_STOCK_COMBINE               = "STOCK_COMBINE";
+const WEBHOOK_MOUVEMENT_STOCK             = "MOUVEMENT_STOCK";
+const WEBHOOK_OPERATION_BANQUE            = "OPERATION_BANQUE";
+const WEBHOOK_RECAP_FIN_SERVICE           = "RECAP_FIN_SERVICE";
+const WEBHOOK_RECAP_FIN_SERVICE_OFFICIEL  = "RECAP_FIN_SERVICE_OFFICIEL";
+
+console.log("🔗 [constantes_globales] Webhooks Discord chargés :", {
+  WEBHOOK_TRANSACTION_LEGAL,
+  WEBHOOK_TRANSACTION_ILLEGAL,
+  WEBHOOK_STOCK_LEGAL,
+  WEBHOOK_STOCK_ILLEGAL,
+  WEBHOOK_STOCK_COMBINE,
+  WEBHOOK_MOUVEMENT_STOCK,
+  WEBHOOK_OPERATION_BANQUE,
+  WEBHOOK_RECAP_FIN_SERVICE,
+  WEBHOOK_RECAP_FIN_SERVICE_OFFICIEL
+});
+
+/* ==========================================================================================
+   �📄 FEUILLES GOOGLE SHEETS
 ========================================================================================== */
 const FEUILLE_ARTICLES        = "Articles";
 const FEUILLE_EMPLOYES        = "Employées";
@@ -51,6 +80,7 @@ const FEUILLE_TCHAT           = "Tchat";
 const FEUILLE_TCHAT_IMPORTANT = "TchatImportant";
 const FEUILLE_TCHAT_ARCHIVE   = "TchatArchive";
 const FEUILLE_ITEMS_CACHE     = "ItemsCache";
+const FEUILLE_TICKETS         = "Tickets";
 
 console.log("📄 [constantes_globales] Feuilles chargées.");
 
@@ -69,6 +99,7 @@ const COL_TCHAT = { Date:1, User:2, Message:3 };
 const COL_TCHAT_IMPORTANT = { Date:1, User:2, Message:3, Tag:4 };
 const COL_TCHAT_ARCHIVE = { Date:1, User:2, Message:3, Source:4 };
 const COL_ITEMS_CACHE = { ItemsCache:1, ItemsRachat:2 };
+const COL_TICKETS = { TicketID:1, Client:2, Vendeur:3, DateAchat:4, DateRevelation:5, Rarete:6, Gain:7, Status:8, DateValidation:9, Validateur:10, MessageID:11, ChanelID:12, CouleurEmbed:13, NoteAdmin:14 };
 
 /* ==========================================================================================
    🏢 ENTREPRISES
@@ -81,6 +112,18 @@ const ENTREPRISES = {
 };
 
 console.log("🏢 [constantes_globales] ENTREPRISES chargées :", ENTREPRISES);
+
+/* ==========================================================================================
+   💰 MAPPING CAISSES (BANQUE) — Cellules dans la feuille COMPTA
+========================================================================================== */
+const BANQUE_MAPPING = {
+  "Illegal":       "B1",
+  "Tequilalala":   "B2",
+  "DowntownCabCo": "B3",
+  "WeazelNews":    "B4"
+};
+
+console.log("💰 [constantes_globales] BANQUE_MAPPING chargés :", BANQUE_MAPPING);
 
 /* ==========================================================================================
    ✔ FIN

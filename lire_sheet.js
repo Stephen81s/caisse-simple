@@ -66,6 +66,14 @@ function lireTicketsDirect() {
 }
 
 /* ====================================================================
+   ALIAS — getAllTickets() pour compatibilité API
+==================================================================== */
+function getAllTickets() {
+  console.log("[lire_sheet] getAllTickets() -> alias vers lireTicketsDirect()");
+  return lireTicketsDirect();
+}
+
+/* ====================================================================
    LECTURE INTERNE - TABLEAU D OBJETS
 ==================================================================== */
 function lireTicketsDirectInternal() {

@@ -178,10 +178,10 @@ function embed_fin_semaine() {
     // 4) Envoi principal (toutes entreprises)
     // ============================================================
     try {
-      const webhook = getWebhook(WEBHOOK_RECAP_FDS);
+      const webhook = getWebhook(WEBHOOK_RECAP_FIN_SERVICE);
 
       if (!webhook) {
-        console.warn(`⚠️ Webhook manquant : ${WEBHOOK_RECAP_FDS} — embed NON envoyé`);
+        console.warn(`⚠️ Webhook manquant : ${WEBHOOK_RECAP_FIN_SERVICE} — embed NON envoyé`);
       } else {
         sendWebhook(webhook, embed);
         console.log("📨 Embed envoyé pour :", entreprise);
@@ -196,10 +196,10 @@ function embed_fin_semaine() {
     // ============================================================
     if (entreprise === "Tequilalala") {
       try {
-        const webhookTequi = getWebhook(WEBHOOK_RECAP_FDS_TEQUI_OFFICIEL);
+        const webhookTequi = getWebhook(WEBHOOK_RECAP_FIN_SERVICE_OFFICIEL);
 
         if (!webhookTequi) {
-          console.warn(`⚠️ Webhook manquant : ${WEBHOOK_RECAP_FDS_TEQUI_OFFICIEL} — embed TEQUI NON envoyé`);
+          console.warn(`⚠️ Webhook manquant : ${WEBHOOK_RECAP_FIN_SERVICE_OFFICIEL} — embed TEQUI NON envoyé`);
         } else {
           sendWebhook(webhookTequi, embed);
           console.log("📨 Embed TEQUI OFFICIEL envoyé !");

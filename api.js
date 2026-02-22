@@ -159,3 +159,59 @@ function apiPublic(action, payload) {
   console.log("🟩 [apiPublic] Résultat renvoyé :", JSON.stringify(result));
   return result;
 }
+
+
+
+/* ============================================================
+   🎟️ CRÉATION D'UN TICKET LOTERIE
+   ============================================================ */
+function createTicket(client, employe, rarete, gain, couleurEmbed) {
+  console.log("🎟️ [createTicket] Création d'un ticket → client=" + client);
+
+  try {
+    const ss = SpreadsheetApp.getActive();
+    
+    // Vérifier si la feuille tickets existe
+    let sheetTickets = ss.getSheetByName("Tickets");
+    if (!sheetTickets) {
+      console.warn("⚠️ [createTicket] Feuille 'Tickets' non trouvée → création…");
+      sheetTickets = ss.insertSheet("Tickets");
+      sheetTickets.appendRow(["ID", "Client", "Employe", "Rarete", "Gain", "DateCreation", "DateRevelation", "Statut"]);
+    }
+
+    // Générer ID ticket
+    const lastRow = sheetTickets.getLastRow();
+    const nextId = "TKT" + String(1001 + (lastRow - 1)).padStart(4, "0");
+
+    // Dates
+    const now = new Date();
+    const dateRevelation = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000); // +7 jours
+
+    // Ajouter à la feuille
+    sheetTickets.appendRow([
+      nextId,
+      client,
+      employe,
+      rarete || "Commun",
+      gain || 0,
+      now.toLocaleString("fr-FR"),
+      dateRevelation.toLocaleString("fr-FR"),
+      "En attente"
+    ]);
+
+    console.log("🟩 [createTicket] Ticket créé :", { id: nextId, client, rarete, dateRevelation });
+
+    return {
+      id: nextId,
+      client: client,
+      rarete: rarete,
+      gain: gain,
+      dateRevelation: dateRevelation.toLocaleString("fr-FR"),
+      statut: "En attente"
+    };
+
+  } catch (err) {
+    console.error("❌ [createTicket] ERREUR :", err);
+    throw err;
+  }
+}
