@@ -2,20 +2,7 @@
      FILE    : index.html
      MODULE  : CORE INTERFACE — GTARP
      AUTHOR  : Stephen
-     VERSION : 4.8.0 — PRO GTARP (FIX INITPAGE + ULTRA LOG)
-     --------------------------------------------------------------------
-     DESCRIPTION :
-       - Shell principal de l’interface GTARP
-       - Navigation dynamique entre pages (openPage)
-       - Injection HTML sécurisée :
-           1) Extraction des <script>
-           2) Injection du HTML
-           3) Réinjection des scripts
-       - FIX CRITIQUE : appel explicite de initPage() du fragment
-       - Isolation stricte des scripts par page
-       - Horloge en temps réel
-       - Encarts de caisses mis à jour automatiquement
-       - Logs professionnels, cohérents et uniformisés
+     VERSION : 4.9.0 — PRO GTARP (ADD ARTICLES + FIX NAV)
 ********************************************************************* -->
 
 <!DOCTYPE html>
@@ -28,17 +15,22 @@
     <!-- ============================================================
          STYLES GLOBAUX (chargés une seule fois)
     ============================================================ -->
-    <?!= include('style_global'); ?>
-    <?!= include('style_nav'); ?>
-    <?!= include('style_encarts'); ?>
-    <?!= include('style_accueil'); ?>
-    <?!= include('style_caisse'); ?>
-    <?!= include('style_articles'); ?>
-    <?!= include('style_livraison'); ?>
-    <?!= include('style_craft'); ?>
-    <?!= include('style_banque'); ?>
-   
-    <!-- CONSTANTES FRONT (disponibles globalement) -->
+        <?!= include('style_global'); ?>
+        <?!= include('style_nav'); ?>
+        <?!= include('style_encarts'); ?>
+        <?!= include('style_accueil'); ?>
+        <?!= include('style_caisse'); ?>
+        <?!= include('style_articles_edit'); ?>
+        <?!= include('style_livraison'); ?>
+        <?!= include('style_craft'); ?>
+        <?!= include('style_banque'); ?>
+
+<!-- ============================================================
+     SYSTEME DE CONNEXION — POPUP + VERIFICATION
+============================================================ -->
+<?!= include('popup_connexion'); ?>
+<?!= include('verif_connexion'); ?>
+    <!-- CONSTANTES FRONT -->
     <?!= include('constantes_front'); ?>
 
     <script>
@@ -61,6 +53,7 @@
                 <button id="nav-accueil" onclick="openPage('interface_accueil')">🏠 Accueil</button>
                 <button id="nav-caisse" onclick="openPage('interface_caisse')">💰 Caisse</button>
                 <button id="nav-craft" onclick="openPage('interface_craft_alcool')">🍾 Craft</button>
+                <button id="nav-articles" onclick="openPage('interface_articles_manager')">📦 Articles</button>
                 <button id="nav-banque" onclick="openPage('banque')">🏦 Banque</button>
                 <button id="nav-tchat" onclick="openPage('tchat_front')">💬 Tchat</button>
             </div>
@@ -119,10 +112,21 @@ let currentPage = null;
    NAVIGATION — Mise en surbrillance du bouton actif
 ============================================================ */
 function setActiveNav(pageName) {
-    const ids = ["nav-accueil", "nav-caisse", "nav-craft", "nav-banque", "nav-ticket", "nav-tchat"];
+
+    const ids = [
+        "nav-accueil",
+        "nav-caisse",
+        "nav-craft",
+        "nav-banque",
+        "nav-tchat",
+        "nav-articles"   // 🆕 AJOUT CRITIQUE
+    ];
+
     ids.forEach(id => document.getElementById(id)?.classList.remove("nav-active"));
 
-    const btn = document.getElementById("nav-" + pageName.split("_")[1]);
+    const key = pageName.replace("interface_", "");
+    const btn = document.getElementById("nav-" + key);
+
     if (btn) btn.classList.add("nav-active");
 }
 
@@ -147,37 +151,23 @@ function openPage(pageName) {
 
             const frame = document.getElementById("page-frame");
 
-            /* ------------------------------------------------------------
-               1) EXTRACTION DES SCRIPTS
-            ------------------------------------------------------------ */
             const temp = document.createElement("div");
             temp.innerHTML = html;
 
             const scripts = [...temp.querySelectorAll("script")];
             scripts.forEach(s => s.remove());
 
-            /* ------------------------------------------------------------
-               2) INJECTION DU HTML
-            ------------------------------------------------------------ */
             frame.innerHTML = temp.innerHTML;
 
-            /* ------------------------------------------------------------
-               3) RÉINJECTION DES SCRIPTS
-            ------------------------------------------------------------ */
             scripts.forEach(oldScript => {
                 const newScript = document.createElement("script");
-
                 if (oldScript.src) newScript.src = oldScript.src;
                 else newScript.textContent = oldScript.textContent;
-
                 frame.appendChild(newScript);
             });
 
             console.log("🟩 [index] Injection terminée. Appel initPage()…");
 
-            /* ------------------------------------------------------------
-               4) FIX CRITIQUE : appel explicite du fragment
-            ------------------------------------------------------------ */
             if (typeof initPage === "function") {
                 console.log("🟦 [index] initPage() détecté → exécution");
                 initPage();

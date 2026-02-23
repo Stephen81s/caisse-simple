@@ -1,0 +1,166 @@
+<style>
+
+/* ********************************************************************
+     FILE    : style_articles_edit.html
+     MODULE  : ARTICLES — STYLE PRO GTARP
+     AUTHOR  : Stephen
+     VERSION : 1.2.0 — PRO GTARP (UI MODERNE + CENTRAGE)
+-----------------------------------------------------------------------
+     DESCRIPTION :
+       - Style complet pour la page interface_articles_manager
+       - Tableau moderne, lisible, centré
+       - Inputs stylés, boutons PRO
+       - Titre centré et mis en valeur
+-----------------------------------------------------------------------
+     NOTES :
+       - Compatible avec tous les modules GTARP
+       - Design sombre, moderne, lisible
+********************************************************************* */
+
+
+
+/* ============================================================
+   PAGE — CENTRAGE GLOBAL
+============================================================ */
+.page-frame {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 25px;
+}
+
+/* ============================================================
+   TITRE — STYLE PRO
+============================================================ */
+.section-title {
+    text-align: center;
+    font-size: 32px;
+    font-weight: 600;
+    color: #ffffff;
+    margin-bottom: 20px;
+    letter-spacing: 1px;
+}
+
+/* ============================================================
+   TABLEAU — STRUCTURE
+============================================================ */
+.articles-table {
+    width: 95%;
+    max-width: 1400px;
+    border-collapse: collapse;
+    margin-top: 10px;
+    background: #1e1e1e;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 0 20px #00000055;
+}
+
+/* ============================================================
+   EN-TÊTES
+============================================================ */
+.articles-table thead th {
+    background: #2c2c2c;
+    color: #ffffff;
+    padding: 14px;
+    font-size: 17px;
+    text-align: center;
+    border-bottom: 2px solid #444;
+    font-weight: 600;
+}
+
+/* ============================================================
+   LIGNES
+============================================================ */
+.articles-table tbody tr {
+    border-bottom: 1px solid #333;
+    transition: background 0.2s;
+}
+
+.articles-table tbody tr:hover {
+    background: #2a2a2a;
+}
+
+/* ============================================================
+   CELLULES
+============================================================ */
+.articles-table td {
+    padding: 12px;
+    text-align: center;
+    color: #e0e0e0;
+    font-size: 15px;
+}
+
+/* ============================================================
+   INPUTS
+============================================================ */
+.articles-table input {
+    width: 95%;
+    padding: 8px 10px;
+    border-radius: 6px;
+    border: 1px solid #555;
+    background: #2b2b2b;
+    color: #fff;
+    text-align: center;
+    font-size: 15px;
+    transition: 0.2s;
+}
+
+.articles-table input:focus {
+    border-color: #4caf50;
+    background: #333;
+    outline: none;
+}
+
+/* ============================================================
+   BOUTONS
+============================================================ */
+.articles-table button {
+    padding: 7px 12px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 17px;
+    margin: 2px;
+    transition: 0.2s;
+}
+
+/* Enregistrer */
+.articles-table button:first-child {
+    background: #2e7d32;
+    color: white;
+}
+
+.articles-table button:first-child:hover {
+    background: #3fa543;
+}
+
+/* Supprimer */
+.articles-table button:last-child {
+    background: #8b0000;
+    color: white;
+}
+
+.articles-table button:last-child:hover {
+    background: #b30000;
+}
+
+/* ============================================================
+   POPUP MESSAGE
+============================================================ */
+#popup-message {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #222;
+    color: white;
+    padding: 15px 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 15px #00000088;
+    font-size: 15px;
+    white-space: pre-line;
+    display: none;
+    max-width: 300px;
+    z-index: 9999;
+}
+
+</style>

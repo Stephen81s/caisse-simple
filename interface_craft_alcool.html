@@ -1,6 +1,6 @@
 <!-- ********************************************************************
      interface_craft_alcool.html — Interface Craft Alcool (FRAGMENT)
-     Version : 4.7.0 — PRO GTARP (sans CSS)
+     Version : 4.7.0 — PRO GTARP (corrigé)
 ********************************************************************* -->
 
 <!-- ========================================================= -->
@@ -45,6 +45,14 @@
         <div class="craft-row" id="fini-2"></div>
     </div>
 
+    <!-- ========================================================= -->
+    <!-- 🌿 SECTION ILLÉGALE — Produits illégaux                  -->
+    <!-- ========================================================= -->
+    <div class="craft-block">
+        <div class="category-header-center">🌿 Produits illégaux</div>
+        <div class="craft-row" id="illegaux"></div>
+    </div>
+
 </div>
 
 <!-- ========================================================= -->
@@ -52,7 +60,8 @@
 <!-- ========================================================= -->
 
 <?!= include('crafts_front'); ?>
-<?!= include('crafts_logique'); ?>
+<!-- ❌ SUPPRIMÉ : include('crafts_logique') car c’est un .gs -->
+<!-- Le backend est chargé automatiquement par Apps Script -->
 
 <!-- ========================================================= -->
 <!-- 🔥 HOOK D’INITIALISATION — VERSION PRO GTARP              -->

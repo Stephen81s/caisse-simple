@@ -1,0 +1,120 @@
+<!-- ********************************************************************
+     FILE    : interface_articles_manager.html
+     MODULE  : GESTION COMPLETE DES ARTICLES — GTARP
+     AUTHOR  : Stephen
+     VERSION : 1.0.2 — PRO GTARP
+********************************************************************* -->
+
+<div class="page-frame">
+
+<h2 class="section-title">📦 Gestion complète des articles</h2>
+
+<div id="popup-message" class="popup"></div>
+
+<table class="articles-table">
+    <thead>
+        <tr>
+            <th>Nom</th>
+            <th>Prix Achat</th>
+            <th>Prix Vente</th>
+            <th>Stock</th>
+            <th>Catégorie</th>
+            <th>Type caisse</th>
+            <th>Types</th>
+            <th>Entreprise</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+
+    <tbody id="articles-body"></tbody>
+</table>
+
+</div> <!-- FIN page-frame -->
+
+<script>
+/* ********************************************************************
+     SCRIPT : GESTION COMPLETE DES ARTICLES — FRONT GTARP
+********************************************************************* */
+
+function showPopup(msg, ok = true) {
+    const box = document.getElementById("popup-message");
+    if (!box) return;
+    box.style.display = "block";
+    box.style.background = ok ? "#2e7d32" : "#8b0000";
+    box.textContent = msg;
+    setTimeout(() => box.style.display = "none", 3000);
+}
+
+function initPage() {
+    console.log("🟦 [articles_manager] Chargement de la liste…");
+
+    google.script.run
+        .withSuccessHandler(buildTable)
+        .withFailureHandler(err => showPopup("Erreur : " + err.message, false))
+        .getAllArticles();
+}
+
+function buildTable(list) {
+    const body = document.getElementById("articles-body");
+    if (!body) {
+        console.error("❌ [articles_manager] #articles-body introuvable !");
+        return;
+    }
+
+    body.innerHTML = "";
+
+    list.forEach(a => {
+        const row = document.createElement("tr");
+
+        row.innerHTML = `
+            <td><input value="${a.Nom}" disabled></td>
+            <td><input id="pa-${a.Nom}" value="${a.PrixAchat}"></td>
+            <td><input id="pv-${a.Nom}" value="${a.PrixVente}"></td>
+            <td><input id="st-${a.Nom}" value="${a.Stock}"></td>
+            <td><input id="cat-${a.Nom}" value="${a.Categorie}"></td>
+            <td><input id="tc-${a.Nom}" value="${a.TypeCaisse}"></td>
+            <td><input id="ty-${a.Nom}" value="${a.Types}"></td>
+            <td><input id="ent-${a.Nom}" value="${a.Entreprise}"></td>
+
+            <td>
+                <button onclick="saveArticle('${a.Nom}')">💾</button>
+                <button onclick="deleteArticle('${a.Nom}')">🗑</button>
+            </td>
+        `;
+
+        body.appendChild(row);
+    });
+
+    console.log("🟩 [articles_manager] Liste affichée :", list.length, "articles");
+}
+
+function saveArticle(nom) {
+    const data = {
+        Nom: nom,
+        PrixAchat: document.getElementById("pa-" + nom).value,
+        PrixVente: document.getElementById("pv-" + nom).value,
+        Stock: document.getElementById("st-" + nom).value,
+        Categorie: document.getElementById("cat-" + nom).value,
+        TypeCaisse: document.getElementById("tc-" + nom).value,
+        Types: document.getElementById("ty-" + nom).value,
+        Entreprise: document.getElementById("ent-" + nom).value
+    };
+
+    google.script.run
+        .withSuccessHandler(() => showPopup("✔ Article mis à jour"))
+        .withFailureHandler(err => showPopup("Erreur : " + err.message, false))
+        .updateArticle(data);
+}
+
+function deleteArticle(nom) {
+    if (!confirm("Supprimer : " + nom + " ?")) return;
+
+    google.script.run
+        .withSuccessHandler(() => {
+            showPopup("🗑 Article supprimé");
+            initPage();
+        })
+        .withFailureHandler(err => showPopup("Erreur : " + err.message, false))
+        .deleteArticle(nom);
+}
+</script>

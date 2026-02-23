@@ -1,23 +1,3 @@
-<!-- ********************************************************************
-     Fichier : crafts_front.html
-     Module  : Logique FRONT du système de craft (GTARP)
-     Auteur  : Stephen
-     Version : 4.7.0 — PRO GTARP
-----------------------------------------------------------------------
-     RÔLE :
-       - Gère l’affichage dynamique des crafts (purs + finis)
-       - Déclenche les appels backend (getCraftsData, craftItem)
-       - Met à jour les quantités et les ingrédients calculés
-       - Affiche les pop-ups de confirmation / erreur
-       - Expose initPage() pour être appelé par le fragment
-----------------------------------------------------------------------
-     LOGGING :
-       Tous les logs sont préfixés :
-         🟦 [craft_front] → actions front
-         🟩 [craft_front] → succès
-         ❌ [craft_front] → erreurs
-********************************************************************* -->
-
 <script>
 
 /* ============================================================
@@ -44,7 +24,6 @@ function showPopup(message, success = true) {
 
 /* ============================================================
    🔥 initPage() — Chargement initial des données
-   Appelé automatiquement par le fragment après injection
 ============================================================ */
 function initPage() {
     console.log("🟦 [craft_front] initPage() → chargement des données de craft…");
@@ -58,7 +37,6 @@ function initPage() {
         .getCraftsData();
 }
 
-// 🔥 Exposition globale obligatoire
 window.initPage = initPage;
 
 
@@ -76,8 +54,9 @@ function buildCraftUI(data) {
         return;
     }
 
+    /* 🔥 Correction : inclure les illégaux dans itemMap */
     const itemMap = {};
-    [...data.produits_purs, ...data.produits_finis].forEach(i => {
+    [...data.produits_purs, ...data.produits_finis, ...data.produits_illegaux].forEach(i => {
         itemMap[i.craft] = i;
     });
 
@@ -112,7 +91,9 @@ function buildCraftUI(data) {
         `;
     }
 
-    // Répartition
+    /* ============================================================
+       🔥 Répartition des crafts ALCOOL
+    ============================================================ */
     const alcoolsFortsPur = data.produits_purs.slice(0, 4);
     const alcoolsFortsFini = data.produits_finis.slice(0, 4);
 
@@ -130,6 +111,21 @@ function buildCraftUI(data) {
 
     document.getElementById("fini-2").innerHTML =
         bieresFini.map(craftCard).join("");
+
+
+    /* ============================================================
+       🔥 SECTION ILLÉGALE — NOUVEAU
+    ============================================================ */
+    if (data.produits_illegaux && data.produits_illegaux.length > 0) {
+        const illegauxHTML = data.produits_illegaux.map(craftCard).join("");
+        const illegauxContainer = document.getElementById("illegaux");
+
+        if (illegauxContainer) {
+            illegauxContainer.innerHTML = illegauxHTML;
+        } else {
+            console.warn("⚠️ [craft_front] Section illégale manquante dans le HTML.");
+        }
+    }
 
     console.log("🟩 [craft_front] UI générée, activation des boutons…");
 
@@ -186,9 +182,7 @@ function activateCraftButtons(itemMap) {
             updateIngredientsCalc(itemData, qty, calcBox);
         });
 
-        /* ============================================================
-           🔥 APPEL BACKEND — craftItem()
-        ============================================================ */
+        /* 🔥 APPEL BACKEND */
         item.querySelector(".craft-btn").addEventListener("click", () => {
 
             const qty = Number(input.value);

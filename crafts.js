@@ -1,14 +1,15 @@
-/**
- * ============================================================
- *  getCraftsData()
- *  ------------------------------------------------------------
- *  Fournit toutes les recettes de craft alcool (purs + finis)
- *  Version PRO — synchronisée avec ox_inventory + serveur RP
- * ============================================================
- */
+/********************************************************************************************
+ * MODULE : CRAFTS — RECETTES ALCOOL + ILLÉGALES
+ * VERSION : 5.0.0 — PRO 2026 (Logs + Structure + Section illégale)
+ * AUTEUR  : Stephen
+ * RÔLE    : Fournit toutes les recettes de craft (purs, finis, illégaux)
+ ********************************************************************************************/
+
 function getCraftsData() {
 
-  return {
+  console.log("🍺 [getCraftsData] Chargement des recettes de craft…");
+
+  const data = {
 
     /* ============================================================
        🧪 PRODUITS PURS (intermédiaires)
@@ -165,6 +166,32 @@ function getCraftsData() {
           ["Bouteille vide", 1]
         ]
       }
+    ],
+
+
+    /* ============================================================
+       🌿 PRODUITS ILLÉGAUX (nouvelle section)
+       ============================================================ */
+    produits_illegaux: [
+
+      {
+        name: "Pochon de weed",
+        craft: "pochonweed",
+        img: "https://i.postimg.cc/0Q0m0m0m/weed.png", // remplace si tu veux
+        ingredients: [
+          ["Weed", 5],
+          ["Pochon vide", 1]
+        ]
+      }
+
     ]
   };
+
+  console.log("🟩 [getCraftsData] Recettes chargées :", {
+    purs: data.produits_purs.length,
+    finis: data.produits_finis.length,
+    illegaux: data.produits_illegaux.length
+  });
+
+  return data;
 }

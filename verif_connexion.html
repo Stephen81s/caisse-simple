@@ -1,0 +1,45 @@
+<!-- ********************************************************************
+     FILE    : verif_connexion.html
+     MODULE  : SYSTEME DE CONNEXION — VERIFICATION
+     AUTHOR  : Stephen
+     VERSION : 1.0.0 — PRO GTARP
+-----------------------------------------------------------------------
+     DESCRIPTION :
+       - Vérifie la connexion via la feuille USERS
+       - Affiche le popup si non validé
+       - Active localStorage si validé
+********************************************************************* -->
+
+<script>
+function verifierConnexion() {
+
+    const nom = localStorage.getItem("Nom");
+    const prenom = localStorage.getItem("Prenom");
+
+    // Si aucune info → popup
+    if (!nom || !prenom) {
+        document.getElementById("popup-connexion").style.display = "block";
+        return;
+    }
+
+    google.script.run
+        .withSuccessHandler(user => {
+
+            if (!user.exists) {
+                // Pas trouvé → popup
+                document.getElementById("popup-connexion").style.display = "block";
+                return;
+            }
+
+            if (!user.validated) {
+                alert("Votre compte n'est pas encore validé.");
+                return;
+            }
+
+            // 🔥 VALIDÉ → accès autorisé
+            console.log("Connexion validée :", nom, prenom);
+
+        })
+        .checkUser(nom, prenom);
+}
+</script>

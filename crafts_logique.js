@@ -2,40 +2,26 @@
  * Fichier : crafts_logique.gs
  * Module  : Logique métier du système de craft (GTARP)
  * Auteur  : Stephen
- * Version : 3.0.0
- * --------------------------------------------------------------------
- * DESCRIPTION :
- *   - Lit le stock dans la feuille "Articles"
- *   - Colonne A = Nom
- *   - Colonne D = Stock (vide = 0)
- *   - Vérifie TOUS les ingrédients manquants
- *   - Déduit les ingrédients
- *   - Ajoute le craft produit
- *   - Met à jour la feuille Articles
- *   - Retourne un message complet au front
- *
- * LOGGING :
- *   Tous les logs sont préfixés pour faciliter le debug.
+ * Version : 4.0.0 — PRO 2026 (support illégal + logs PRO)
  ***************************************************************/
 
 console.log("🟦 [crafts_logique] Module chargé.");
 
-
-/**
- * ============================================================
- *  craftItem(craftName, qty)
- * ============================================================
- */
 function craftItem(craftName, qty) {
   console.log(`📨 [crafts_logique] Requête craft → ${craftName} × ${qty}`);
 
   try {
 
     /* ------------------------------------------------------------
-     * 1) Charger les données JSON
+     * 1) Charger les données JSON (purs + finis + illégaux)
      * ------------------------------------------------------------ */
     const data = getCraftsData();
-    const allItems = [...data.produits_purs, ...data.produits_finis];
+
+    const allItems = [
+      ...data.produits_purs,
+      ...data.produits_finis,
+      ...data.produits_illegaux   // 🔥 AJOUT ESSENTIEL
+    ];
 
     const craft = allItems.find(i => i.craft === craftName);
     if (!craft) throw new Error("Craft introuvable : " + craftName);
@@ -50,14 +36,13 @@ function craftItem(craftName, qty) {
     if (!sheet) throw new Error('Feuille "Articles" introuvable.');
 
     const values = sheet.getDataRange().getValues();
-    const raw = values.slice(1); // ignorer l’en-tête
+    const raw = values.slice(1);
 
     const stockMap = {};
 
     raw.forEach(row => {
-      const nom = String(row[0]).trim(); // Colonne A
-      const stockCell = row[3];          // Colonne D = Stock
-
+      const nom = String(row[0]).trim();
+      const stockCell = row[3];
       const qte = (stockCell === "" || stockCell === null) ? 0 : Number(stockCell);
 
       if (nom !== "") {
@@ -69,7 +54,7 @@ function craftItem(craftName, qty) {
 
 
     /* ------------------------------------------------------------
-     * 3) Vérifier la disponibilité des ingrédients
+     * 3) Vérifier les ingrédients
      * ------------------------------------------------------------ */
     const consommations = [];
     const manquants = [];
@@ -91,7 +76,6 @@ function craftItem(craftName, qty) {
       }
     }
 
-    // Si au moins un ingrédient manque → erreur
     if (manquants.length > 0) {
 
       const listeManquants = manquants
@@ -145,7 +129,7 @@ function craftItem(craftName, qty) {
     for (let i = 1; i < newValues.length; i++) {
       const nom = String(newValues[i][0]).trim();
       if (stockMap[nom] !== undefined) {
-        newValues[i][3] = stockMap[nom]; // colonne D
+        newValues[i][3] = stockMap[nom];
       }
     }
 
