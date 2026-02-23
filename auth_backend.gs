@@ -32,6 +32,8 @@ function checkUser(nom, prenom) {
 }
 
 function registerUserRequest(nom, prenom) {
+  Logger.log("🔥 registerUserRequest() REÇU :", nom, prenom);
+
   const sheet = SpreadsheetApp.getActive().getSheetByName("USERS");
   sheet.appendRow([nom, prenom, new Date(), false]);
   return true;

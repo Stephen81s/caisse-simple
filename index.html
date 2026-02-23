@@ -2,7 +2,7 @@
      FILE    : index.html
      MODULE  : CORE INTERFACE — GTARP
      AUTHOR  : Stephen
-     VERSION : 4.9.0 — PRO GTARP (ADD ARTICLES + FIX NAV)
+     VERSION : 4.9.1 — PRO GTARP (ADD RESET + FIX POPUP SCRIPT)
 ********************************************************************* -->
 
 <!DOCTYPE html>
@@ -15,21 +15,16 @@
     <!-- ============================================================
          STYLES GLOBAUX (chargés une seule fois)
     ============================================================ -->
-        <?!= include('style_global'); ?>
-        <?!= include('style_nav'); ?>
-        <?!= include('style_encarts'); ?>
-        <?!= include('style_accueil'); ?>
-        <?!= include('style_caisse'); ?>
-        <?!= include('style_articles_edit'); ?>
-        <?!= include('style_livraison'); ?>
-        <?!= include('style_craft'); ?>
-        <?!= include('style_banque'); ?>
+    <?!= include('style_global'); ?>
+    <?!= include('style_nav'); ?>
+    <?!= include('style_encarts'); ?>
+    <?!= include('style_accueil'); ?>
+    <?!= include('style_caisse'); ?>
+    <?!= include('style_articles_edit'); ?>
+    <?!= include('style_livraison'); ?>
+    <?!= include('style_craft'); ?>
+    <?!= include('style_banque'); ?>
 
-<!-- ============================================================
-     SYSTEME DE CONNEXION — POPUP + VERIFICATION
-============================================================ -->
-<?!= include('popup_connexion'); ?>
-<?!= include('verif_connexion'); ?>
     <!-- CONSTANTES FRONT -->
     <?!= include('constantes_front'); ?>
 
@@ -39,6 +34,13 @@
 </head>
 
 <body>
+
+<!-- ============================================================
+     SYSTEME DE CONNEXION — POPUP + SCRIPT + VERIFICATION
+============================================================ -->
+<?!= include('popup_connexion'); ?>
+<?!= include('popup_connexion_script'); ?>
+<?!= include('verif_connexion'); ?>
 
 <!-- ============================================================
      HEADER + NAVIGATION
@@ -63,8 +65,28 @@
     <h1 class="header-title">Le consortium — Interface</h1>
 
     <div id="horloge" class="header-clock"></div>
+    <div id="status-connexion" class="status-connexion"></div>
+
+    <!-- 🔄 Bouton Reset / Déconnexion -->
+    <button onclick="resetConnexion()" class="reset-btn">🔄 Reset</button>
 
 </header>
+
+<style>
+.reset-btn {
+    margin-left: 10px;
+    padding: 6px 12px;
+    background: #444;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+}
+.reset-btn:hover {
+    background: #666;
+}
+</style>
 
 <!-- ============================================================
      ENCARDS TOUJOURS VISIBLES
@@ -119,7 +141,7 @@ function setActiveNav(pageName) {
         "nav-craft",
         "nav-banque",
         "nav-tchat",
-        "nav-articles"   // 🆕 AJOUT CRITIQUE
+        "nav-articles"
     ];
 
     ids.forEach(id => document.getElementById(id)?.classList.remove("nav-active"));
@@ -216,11 +238,25 @@ function rafraichirMontants() {
 }
 
 /* ============================================================
+   RESET / DECONNEXION
+============================================================ */
+function resetConnexion() {
+    console.log("🔄 Réinitialisation de la connexion…");
+
+    localStorage.removeItem("Nom");
+    localStorage.removeItem("Prenom");
+
+    location.reload();
+}
+
+/* ============================================================
    CHARGEMENT INITIAL
 ============================================================ */
 window.addEventListener("load", () => {
 
     console.log("🟦 [index] Chargement initial…");
+
+    verifierConnexion();   // Activation du système de connexion
 
     lancerHorloge();
     rafraichirMontants();

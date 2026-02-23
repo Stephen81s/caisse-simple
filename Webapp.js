@@ -1,8 +1,8 @@
 /********************************************************************
  * FILE    : Webapp.gs
- * MODULE  : BACKEND — POINT D’ENTRÉE WEBAPP + ROUTAGE
+ * MODULE  : BACKEND — POINT D’ENTRÉE WEBAPP + INCLUDES
  * AUTHOR  : Stephen
- * VERSION : 3.1.0 — PRO (FIX include conflict)
+ * VERSION : 3.0.0 — PRO (AJOUT doPost + ROUTAGE LOTERIE)
  ********************************************************************/
 
 console.log("🟦 [Webapp] Initialisation du module WebApp…");
@@ -30,16 +30,31 @@ function doGet() {
 }
 
 /* ============================================================
+   📄 include() — Inclusion HTML
+============================================================ */
+function include(filename) {
+  console.log(`📄 [Webapp] include("${filename}") demandé…`);
+
+  try {
+    const content = HtmlService.createHtmlOutputFromFile(filename).getContent();
+    console.log(`🟩 [Webapp] include("${filename}") OK`);
+    return content;
+
+  } catch (err) {
+    console.error(`❌ [Webapp] ERREUR include("${filename}") :`, err);
+    return `<div style="color:red;">Erreur include : ${filename}</div>`;
+  }
+}
+
+/* ============================================================
    📄 loadPage() — Chargement dynamique d’une page HTML
 ============================================================ */
 function loadPage(pageName) {
   console.log(`📄 [Webapp] loadPage("${pageName}") demandé…`);
 
   try {
-    const html = HtmlService
-      .createTemplateFromFile(pageName)
-      .evaluate()
-      .getContent();
+    const template = HtmlService.createTemplateFromFile(pageName);
+    const html = template.evaluate().getContent();
 
     console.log(`🟩 [Webapp] Page "${pageName}" chargée avec succès.`);
     return html;
@@ -52,6 +67,8 @@ function loadPage(pageName) {
 
 /* ============================================================
    🌐 doPost() — Point d’entrée API (POST /exec)
+   → Permet aux modules modernes (comme LOTERIE) de fonctionner
+   → Compatible DEV et EXEC automatiquement
 ============================================================ */
 function doPost(e) {
   console.log("🟦 [Webapp] doPost() appelé…");
@@ -68,7 +85,7 @@ function doPost(e) {
         .setMimeType(ContentService.MimeType.JSON);
     }
 
-    /* === API GÉNÉRALE === */
+    /* === API GÉNÉRALE (si existante) === */
     if (typeof api_router === "function") {
       console.log("🛠️ [Webapp] → Route API générale");
       return ContentService

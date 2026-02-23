@@ -1,0 +1,53 @@
+<script>
+
+/* ============================================================
+   PATCH PRO : Attendre que google.script.run soit prêt
+   ============================================================ */
+function attendreGoogleScript(callback) {
+    if (typeof google !== "undefined" && google.script && google.script.run) {
+        callback();
+    } else {
+        console.log("⏳ google.script.run pas encore prêt…");
+        setTimeout(() => attendreGoogleScript(callback), 50);
+    }
+}
+
+/* ============================================================
+   ENVOI DE LA DEMANDE DE CONNEXION
+   ============================================================ */
+function envoyerDemande() {
+    const nom = document.getElementById("nom-input").value.trim();
+    const prenom = document.getElementById("prenom-input").value.trim();
+
+    console.log("CLICK OK"); // DEBUG
+
+    if (!nom || !prenom) {
+        alert("Merci de remplir les deux champs.");
+        return;
+    }
+
+    // 🔥 Patch PRO : attendre que Apps Script soit prêt
+    attendreGoogleScript(() => {
+        console.log("🟩 google.script.run prêt → envoi au backend");
+
+        google.script.run
+            .withSuccessHandler(() => {
+
+                // Stockage local
+                localStorage.setItem("Nom", nom);
+                localStorage.setItem("Prenom", prenom);
+
+                alert("Votre demande a été envoyée. En attente de validation.");
+
+                // Masquer le popup
+                document.getElementById("popup-connexion").style.display = "none";
+            })
+            .withFailureHandler(err => {
+                console.error("❌ ERREUR google.script.run :", err);
+                alert("Erreur lors de l’envoi. Réessayez.");
+            })
+            .registerUserRequest(nom, prenom);
+    });
+}
+
+</script>
