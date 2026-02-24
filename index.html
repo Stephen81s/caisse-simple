@@ -2,7 +2,7 @@
      FILE    : index.html
      MODULE  : CORE INTERFACE — GTARP
      AUTHOR  : Stephen
-     VERSION : 4.9.1 — PRO GTARP (ADD RESET + FIX POPUP SCRIPT)
+     VERSION : 4.9.2 — PRO GTARP (FIX POPUP SCRIPT POSITION)
 ********************************************************************* -->
 
 <!DOCTYPE html>
@@ -36,10 +36,10 @@
 <body>
 
 <!-- ============================================================
-     SYSTEME DE CONNEXION — POPUP + SCRIPT + VERIFICATION
+     SYSTEME DE CONNEXION — POPUP + VERIFICATION
+     (⚠️ Le script popup est déplacé en bas du fichier)
 ============================================================ -->
 <?!= include('popup_connexion'); ?>
-<?!= include('popup_connexion_script'); ?>
 <?!= include('verif_connexion'); ?>
 
 <!-- ============================================================
@@ -294,6 +294,50 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 });
+</script>
+
+<!-- ============================================================
+     🔥 SCRIPT POPUP — DÉPLACÉ ICI (COMME LE TCHAT)
+============================================================ -->
+<script>
+function attendreGoogleScript(callback) {
+    if (typeof google !== "undefined" && google.script && google.script.run) {
+        callback();
+    } else {
+        console.log("⏳ google.script.run pas encore prêt…");
+        setTimeout(() => attendreGoogleScript(callback), 50);
+    }
+}
+
+function envoyerDemande() {
+    const nom = document.getElementById("nom-input").value.trim();
+    const prenom = document.getElementById("prenom-input").value.trim();
+
+    console.log("CLICK OK");
+
+    if (!nom || !prenom) {
+        alert("Merci de remplir les deux champs.");
+        return;
+    }
+
+    attendreGoogleScript(() => {
+        console.log("🟩 google.script.run prêt → envoi au backend");
+
+        google.script.run
+            .withSuccessHandler(() => {
+                localStorage.setItem("Nom", nom);
+                localStorage.setItem("Prenom", prenom);
+
+                alert("Votre demande a été envoyée. En attente de validation.");
+                document.getElementById("popup-connexion").style.display = "none";
+            })
+            .withFailureHandler(err => {
+                console.error("❌ ERREUR google.script.run :", err);
+                alert("Erreur lors de l’envoi. Réessayez.");
+            })
+            .registerUserRequest(nom, prenom);
+    });
+}
 </script>
 
 </body>
